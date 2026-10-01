@@ -1,0 +1,353 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String    @id @default(cuid())
+  employeeId       String    @unique
+  email            String    @unique
+  passwordHash     String
+  name             String
+  phone            String?
+  avatarUrl        String?
+  departmentId     String?
+  designation      String?
+  role             String    @default("EMPLOYEE") // SUPER_ADMIN, MANAGER, EMPLOYEE
+  status           String    @default("ACTIVE")   // ACTIVE, DEACTIVATED, ARCHIVED
+  managerId        String?
+  joiningDate      DateTime  @default(now())
+  workLocation     String?   @default("Office")
+  workingHours     String?   @default("09:00 - 18:00")
+  emergencyContact String?
+  skills           String?
+  bio              String?
+  lastActiveAt     DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  department       Department? @relation(fields: [departmentId], references: [id])
+  manager          User?       @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  subordinates     User[]      @relation("ManagerSubordinates")
+
+  attendances      Attendance[]
+  breaks           Break[]
+  corrections      AttendanceCorrection[] @relation("UserCorrections")
+  tasksAssigned    Task[]      @relation("TaskAssignee")
+  tasksCreated     Task[]      @relation("TaskCreator")
+  taskComments     TaskComment[]
+  projectMembers   ProjectMember[]
+  dailyUpdates     DailyUpdate[]
+  channelMembers   ChannelMember[]
+  messagesSent     Message[]   @relation("MessageSender")
+  messageReactions MessageReaction[]
+  notifications    Notification[]
+  leaveRequests    LeaveRequest[] @relation("UserLeaves")
+  announcements    Announcement[] @relation("AnnouncementCreator")
+  auditLogs        AuditLog[]
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  users         User[]
+  announcements Announcement[]
+}
+
+model Attendance {
+  id                   String    @id @default(cuid())
+  userId               String
+  date                 String    // YYYY-MM-DD
+  checkIn              DateTime?
+  checkOut             DateTime?
+  status               String    @default("PRESENT") // PRESENT, LATE, HALF_DAY, ABSENT, ON_LEAVE, HOLIDAY, WEEK_OFF, MISSING_CHECKOUT
+  workDurationMinutes  Int       @default(0)
+  breakDurationMinutes Int       @default(0)
+  ipAddress            String?
+  deviceInfo           String?
+  notes                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  breaks               Break[]
+  corrections          AttendanceCorrection[]
+
+  @@unique([userId, date])
+}
+
+model Break {
+  id              String     @id @default(cuid())
+  attendanceId    String
+  userId          String
+  startTime       DateTime   @default(now())
+  endTime         DateTime?
+  durationMinutes Int        @default(0)
+  reason          String?
+  createdAt       DateTime   @default(now())
+
+  attendance      Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AttendanceCorrection {
+  id                String      @id @default(cuid())
+  attendanceId      String?
+  userId            String
+  requestedDate     String      // YYYY-MM-DD
+  requestedCheckIn  String?     // e.g. "09:00"
+  requestedCheckOut String?     // e.g. "18:00"
+  reason            String
+  status            String      @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById      String?
+  reviewNotes       String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  attendance        Attendance? @relation(fields: [attendanceId], references: [id])
+  user              User        @relation("UserCorrections", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  client      String?
+  description String?
+  managerId   String?
+  status      String    @default("ACTIVE") // PLANNING, ACTIVE, ON_HOLD, COMPLETED
+  startDate   DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members     ProjectMember[]
+  tasks       Task[]
+  milestones  Milestone[]
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  startDate   DateTime?
+  dueDate     DateTime?
+  status      String    @default("IN_PROGRESS") // UPCOMING, IN_PROGRESS, COMPLETED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      String   @default("MEMBER")
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  taskId      String    @unique // e.g. TSK-101
+  title       String
+  description String?
+  projectId   String?
+  milestoneId String?
+  assignedToId String?
+  createdById String
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status      String    @default("TODO")   // TODO, IN_PROGRESS, REVIEW, COMPLETED, BLOCKED
+  startDate   DateTime?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project     Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone   Milestone?      @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  assignedTo  User?           @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdBy   User            @relation("TaskCreator", fields: [createdById], references: [id])
+  comments    TaskComment[]
+  attachments TaskAttachment[]
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TaskAttachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  fileName  String
+  fileUrl   String
+  fileSize  Int?
+  fileType  String?
+  createdAt DateTime @default(now())
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model DailyUpdate {
+  id            String   @id @default(cuid())
+  userId        String
+  date          String   // YYYY-MM-DD
+  completedWork String
+  pendingWork   String
+  blockedWork   String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model Channel {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g. general, development, marketing
+  topic       String?
+  isPrivate   Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+
+  members     ChannelMember[]
+  messages    Message[]
+}
+
+model ChannelMember {
+  id        String   @id @default(cuid())
+  channelId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+}
+
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  channelId   String?   // null if direct message
+  recipientId String?   // recipient user ID for direct message
+  content     String
+  attachments String?
+  isPinned    Boolean   @default(false)
+  replyToId   String?
+  editedAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  channel     Channel?  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  reactions   MessageReaction[]
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // TASK_ASSIGNED, DEADLINE, MENTION, ANNOUNCEMENT, LEAVE_STATUS, CORRECTION_STATUS
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LeaveRequest {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String   @default("CASUAL") // CASUAL, SICK, PERSONAL, OTHER
+  startDate    String   // YYYY-MM-DD
+  endDate      String   // YYYY-MM-DD
+  totalDays    Int      @default(1)
+  reason       String
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById String?
+  reviewNotes  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation("UserLeaves", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id           String      @id @default(cuid())
+  title        String
+  content      String
+  createdById  String
+  priority     String      @default("NORMAL") // NORMAL, IMPORTANT, URGENT
+  audience     String      @default("EVERYONE") // EVERYONE, DEPARTMENT, SPECIFIC
+  departmentId String?
+  createdAt    DateTime    @default(now())
+
+  createdBy    User        @relation("AnnouncementCreator", fields: [createdById], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+}
+
+model Holiday {
+  id         String   @id @default(cuid())
+  name       String
+  date       String   // YYYY-MM-DD
+  isOptional Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userName   String?
+  action     String   // EMPLOYEE_CREATED, ATTENDANCE_CORRECTED, LEAVE_APPROVED, etc.
+  targetType String   // USER, ATTENDANCE, TASK, LEAVE, SETTING
+  targetId   String?
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model CompanySetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
