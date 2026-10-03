@@ -20,6 +20,7 @@ import {
 import { formatDateDisplay } from "@/lib/utils";
 import TaskCreateModal from "@/components/tasks/TaskCreateModal";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
+import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function LeadTasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -84,8 +85,15 @@ export default function LeadTasksPage() {
   };
 
   const handleRequestChanges = async (taskId: string) => {
-    const feedback = prompt("Enter specific feedback / requested modifications for the team member:") || "";
-    if (!feedback.trim()) return;
+    const feedback = await promptAction({
+      title: "Request Task Changes",
+      message: "Specify feedback or required modifications for the team member before they resubmit.",
+      confirmText: "Request Changes",
+      variant: "danger",
+      noteLabel: "Feedback / Changes Requested",
+      notePlaceholder: "Detail what needs to be changed or improved...",
+    });
+    if (!feedback || !feedback.trim()) return;
 
     try {
       await fetch("/api/tasks/comments", {

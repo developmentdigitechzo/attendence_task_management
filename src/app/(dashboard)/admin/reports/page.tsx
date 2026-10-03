@@ -65,6 +65,22 @@ export default function AdminReportsPage() {
     window.print();
   };
 
+  const getExportUrl = (format: "csv" | "excel") => {
+    const params = new URLSearchParams();
+    params.set("type", reportType);
+    params.set("format", format);
+    if (reportType === "weekly") {
+      params.set("startDate", startDate);
+      params.set("endDate", endDate);
+    } else {
+      params.set("month", month);
+    }
+    if (departmentId && departmentId !== "ALL") {
+      params.set("departmentId", departmentId);
+    }
+    return `/api/reports/export?${params.toString()}`;
+  };
+
   return (
     <div className="space-y-6 pb-12 print:p-0 print:space-y-4">
       {/* Page Header */}
@@ -89,7 +105,7 @@ export default function AdminReportsPage() {
           </button>
 
           <a
-            href={`/api/reports/export?type=${reportType}&format=csv&month=${month}`}
+            href={getExportUrl("csv")}
             download
             className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-xs transition flex items-center gap-1.5"
           >
@@ -98,7 +114,7 @@ export default function AdminReportsPage() {
           </a>
 
           <a
-            href={`/api/reports/export?type=${reportType}&format=excel&month=${month}`}
+            href={getExportUrl("excel")}
             download
             className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5"
           >

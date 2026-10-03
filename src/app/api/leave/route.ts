@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
 
   if (user.role === "EMPLOYEE") {
     where.userId = user.id;
+  } else if (user.role === "MANAGER") {
+    // Team Leader only sees leave requests from employees assigned to them
+    where.user = { managerId: user.id };
   }
 
   const leaves = await prisma.leaveRequest.findMany({

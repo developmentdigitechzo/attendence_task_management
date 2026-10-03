@@ -14,9 +14,12 @@ export async function GET(req: NextRequest) {
 
   const where: any = { date };
 
-  // If regular employee, show own update; if manager/admin, show all team updates
+  // If regular employee, show own update; if manager, show assigned team updates; if admin, show all
   if (user.role === "EMPLOYEE") {
     where.userId = user.id;
+  } else if (user.role === "MANAGER") {
+    // Team Leader only sees daily standups of employees assigned to them
+    where.user = { managerId: user.id };
   }
 
   const updates = await prisma.dailyUpdate.findMany({

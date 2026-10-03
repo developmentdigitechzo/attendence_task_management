@@ -13,6 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { formatDateDisplay } from "@/lib/utils";
+import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function LeadLeavePage() {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -44,8 +45,16 @@ export default function LeadLeavePage() {
     leaveId: string,
     action: "APPROVE" | "REJECT"
   ) => {
-    const reviewNotes =
-      prompt(`Enter remark for ${action.toLowerCase()}ing:`) || "";
+    const isApprove = action === "APPROVE";
+    const reviewNotes = await promptAction({
+      title: isApprove ? "Approve Leave Request" : "Reject Leave Request",
+      message: `Are you sure you want to ${isApprove ? "approve" : "reject"} this leave request?`,
+      confirmText: isApprove ? "Approve" : "Reject",
+      variant: isApprove ? "default" : "danger",
+      noteLabel: "Review Remark (optional)",
+      notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
+    });
+    if (reviewNotes === null) return;
     try {
       const res = await fetch("/api/leave", {
         method: "PATCH",

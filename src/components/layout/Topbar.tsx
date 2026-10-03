@@ -2,11 +2,27 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Bell, Search, MessageSquare, Clock, CheckCircle2, AlertCircle, Menu } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  Search,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Menu,
+  Users,
+  CheckSquare,
+  FolderGit2,
+  Building,
+  X,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import NotificationDropdown from "./NotificationDropdown";
 import PushNotificationManager from "./PushNotificationManager";
 import { toast } from "@/components/ui/ToastProvider";
+import SearchDetailModal, { SearchDetailItem } from "./SearchDetailModal";
 
 interface TopbarProps {
   user: {
@@ -18,11 +34,99 @@ interface TopbarProps {
 }
 
 export default function Topbar({ user, onMenuClick }: TopbarProps) {
+  const router = useRouter();
   const [timeString, setTimeString] = useState<string>("");
   const [liveStatus, setLiveStatus] = useState<"WORKING" | "ON_BREAK" | "OFFLINE">("OFFLINE");
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const seenIds = useRef<Set<string> | null>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Global Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<{
+    employees: any[];
+    tasks: any[];
+    projects: any[];
+    departments: any[];
+  } | null>(null);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<SearchDetailItem | null>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Debounced search query
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q || q.length < 2) {
+      setSearchResults(null);
+      setIsSearchOpen(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    setIsSearchOpen(true);
+    const handler = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.results);
+        }
+      } catch (err) {
+        console.error("Search error:", err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Click outside search
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSearchOpen]);
+
+  // Click outside notifications
+  useEffect(() => {
+    if (!isNotifOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsNotifOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isNotifOpen]);
 
   useEffect(() => {
     // Update live clock every second
@@ -124,14 +228,203 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
           </div>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full min-w-0">
-          <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-slate-400 absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2" />
+        {/* Global Search Input */}
+        <div className="relative w-full min-w-0" ref={searchRef}>
+          <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-slate-400 absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              if (searchQuery.trim().length >= 2 && searchResults) {
+                setIsSearchOpen(true);
+              }
+            }}
             placeholder="Search employees, tasks, projects..."
-            className="w-full pl-9 sm:pl-11 pr-3 sm:pr-4 py-2 sm:py-2.5 text-xs sm:text-[13.5px] text-slate-800 placeholder:text-slate-400 bg-slate-100/80 hover:bg-slate-100 focus:bg-white rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 outline-none transition truncate"
+            className="w-full pl-9 sm:pl-11 pr-8 sm:pr-9 py-2 sm:py-2.5 text-xs sm:text-[13.5px] text-slate-800 placeholder:text-slate-400 bg-slate-100/80 hover:bg-slate-100 focus:bg-white rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 outline-none transition truncate"
           />
+
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setIsSearchOpen(false);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200 transition"
+              aria-label="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {/* Search Dropdown Results */}
+          {isSearchOpen && (
+            <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-3 z-50 max-h-[75vh] overflow-y-auto animate-in fade-in duration-100">
+              {searchLoading ? (
+                <div className="py-6 flex items-center justify-center gap-2 text-xs text-slate-400 font-medium">
+                  <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
+                  <span>Searching WorkOS...</span>
+                </div>
+              ) : !searchResults || (
+                searchResults.employees.length === 0 &&
+                searchResults.tasks.length === 0 &&
+                searchResults.projects.length === 0 &&
+                searchResults.departments.length === 0
+              ) ? (
+                <div className="py-6 text-center text-xs text-slate-400 font-medium">
+                  No matches found for &ldquo;{searchQuery}&rdquo;
+                </div>
+              ) : (
+                <div className="space-y-3 divide-y divide-slate-100">
+                  {/* Employees Group */}
+                  {searchResults.employees.length > 0 && (
+                    <div className="px-3 pt-1">
+                      <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <Users className="w-3 h-3 text-slate-500" />
+                        Employees ({searchResults.employees.length})
+                      </p>
+                      <div className="space-y-1">
+                        {searchResults.employees.map((emp) => (
+                          <button
+                            key={emp.id}
+                            type="button"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSelectedDetailItem({ type: "employee", data: emp });
+                            }}
+                            className="w-full text-left p-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[11px] shrink-0">
+                                {emp.name[0]}
+                              </div>
+                              <div className="truncate">
+                                <p className="text-xs font-semibold text-slate-900 group-hover:text-brand-700 transition truncate">
+                                  {emp.name}
+                                </p>
+                                <p className="text-[10px] text-slate-500 truncate">
+                                  {emp.employeeId} • {emp.designation || emp.role} • {emp.department?.name || "General"}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] text-slate-400 group-hover:text-brand-600 transition shrink-0 ml-2">
+                              View →
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tasks Group */}
+                  {searchResults.tasks.length > 0 && (
+                    <div className="px-3 pt-2">
+                      <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <CheckSquare className="w-3 h-3 text-slate-500" />
+                        Tasks ({searchResults.tasks.length})
+                      </p>
+                      <div className="space-y-1">
+                        {searchResults.tasks.map((task) => (
+                          <button
+                            key={task.id}
+                            type="button"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSelectedDetailItem({ type: "task", data: task });
+                            }}
+                            className="w-full text-left p-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between group"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-slate-900 group-hover:text-brand-700 transition truncate">
+                                {task.title}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                {task.taskId} • {task.project?.name || "Independent"}
+                              </p>
+                            </div>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 shrink-0 ml-2">
+                              {task.status}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Projects Group */}
+                  {searchResults.projects.length > 0 && (
+                    <div className="px-3 pt-2">
+                      <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <FolderGit2 className="w-3 h-3 text-slate-500" />
+                        Projects ({searchResults.projects.length})
+                      </p>
+                      <div className="space-y-1">
+                        {searchResults.projects.map((proj) => (
+                          <button
+                            key={proj.id}
+                            type="button"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSelectedDetailItem({ type: "project", data: proj });
+                            }}
+                            className="w-full text-left p-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between group"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-slate-900 group-hover:text-brand-700 transition truncate">
+                                {proj.name}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                Client: {proj.client || "Internal"}
+                              </p>
+                            </div>
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 shrink-0 ml-2">
+                              {proj.status}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Departments Group */}
+                  {searchResults.departments.length > 0 && (
+                    <div className="px-3 pt-2">
+                      <p className="px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <Building className="w-3 h-3 text-slate-500" />
+                        Departments ({searchResults.departments.length})
+                      </p>
+                      <div className="space-y-1">
+                        {searchResults.departments.map((dept) => (
+                          <button
+                            key={dept.id}
+                            type="button"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSelectedDetailItem({ type: "department", data: dept });
+                            }}
+                            className="w-full text-left p-2 rounded-xl hover:bg-slate-50 transition flex items-center justify-between group"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-slate-900 group-hover:text-brand-700 transition truncate">
+                                {dept.name}
+                              </p>
+                              <p className="text-[10px] text-slate-500 truncate">
+                                Code: {dept.code}
+                              </p>
+                            </div>
+                            <span className="text-[10px] text-slate-400 group-hover:text-brand-600 transition shrink-0 ml-2">
+                              View →
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -178,9 +471,9 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
         <PushNotificationManager />
 
         {/* Notification Bell */}
-        <div className="relative">
+        <div className="relative" ref={notifRef}>
           <button
-            onClick={() => setIsNotifOpen(!isNotifOpen)}
+            onClick={() => setIsNotifOpen((prev) => !prev)}
             className="relative p-2 sm:p-2.5 text-slate-600 bg-slate-50 border border-slate-200 hover:text-brand-700 hover:bg-brand-50 hover:border-brand-200 rounded-xl transition"
             title="Notifications"
             aria-label="Notifications"
@@ -201,6 +494,13 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
           )}
         </div>
       </div>
+
+      {/* Global Search Result Detail Modal */}
+      <SearchDetailModal
+        item={selectedDetailItem}
+        onClose={() => setSelectedDetailItem(null)}
+        userRole={user.role}
+      />
     </header>
   );
 }

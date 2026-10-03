@@ -25,8 +25,18 @@ export async function GET(req: NextRequest) {
 
   if (assignedToId && assignedToId !== "ALL") {
     where.assignedToId = assignedToId;
+    if (user.role === "MANAGER") {
+      where.assignedTo = { managerId: user.id };
+    }
   } else if (filter === "my" || user.role === "EMPLOYEE") {
     where.assignedToId = user.id;
+  } else if (user.role === "MANAGER") {
+    // For Team Leader, only show tasks belonging to their assigned team members, assigned to themselves, or created by them
+    where.OR = [
+      { assignedTo: { managerId: user.id } },
+      { assignedToId: user.id },
+      { createdById: user.id },
+    ];
   }
 
   const now = new Date();
@@ -87,27 +97,56 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Task title is required." }, { status: 400 });
     }
 
-    // Generate unique sequential Task ID
-    const count = await prisma.task.count();
-    const taskId = `TSK-${String(count + 101).padStart(3, "0")}`;
-
-    const task = await prisma.task.create({
-      data: {
-        taskId,
-        title,
-        description,
-        projectId: projectId || null,
-        assignedToId: assignedToId || null,
-        createdById: user.id,
-        priority,
-        status: "TODO",
-        dueDate: dueDate ? new Date(dueDate) : null,
-      },
-      include: {
-        assignedTo: true,
-        project: true,
-      },
+    // Generate guaranteed unique sequential Task ID
+    const existingTasks = await prisma.task.findMany({
+      select: { taskId: true },
     });
+    let maxNum = 100;
+    for (const t of existingTasks) {
+      const match = t.taskId?.match(/^TSK-(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    }
+
+    let task;
+    let nextNum = maxNum + 1;
+    let attempts = 0;
+
+    while (!task && attempts < 5) {
+      try {
+        const currentTaskId = `TSK-${nextNum}`;
+        task = await prisma.task.create({
+          data: {
+            taskId: currentTaskId,
+            title: title.trim(),
+            description: description?.trim() || null,
+            projectId: projectId || null,
+            assignedToId: assignedToId || null,
+            createdById: user.id,
+            priority,
+            status: "TODO",
+            dueDate: dueDate ? new Date(dueDate) : null,
+          },
+          include: {
+            assignedTo: true,
+            project: true,
+          },
+        });
+      } catch (err: any) {
+        if (err.code === "P2002" && err.meta?.target?.includes("taskId")) {
+          nextNum++;
+          attempts++;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    if (!task) {
+      return NextResponse.json({ error: "Could not generate a unique task ID. Please try again." }, { status: 500 });
+    }
 
     // Notify assignee
     if (assignedToId && assignedToId !== user.id) {

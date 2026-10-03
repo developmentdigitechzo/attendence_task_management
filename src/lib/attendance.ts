@@ -44,3 +44,68 @@ export function calculateWorkingMinutes(
   const workMin = Math.max(0, totalMin - breakMinutes);
   return workMin;
 }
+
+/**
+ * Automatically ensures an active user is checked in for today upon logging in or starting their session
+ */
+export async function ensureUserCheckedInToday(
+  userId: string,
+  ipAddress: string = "127.0.0.1",
+  deviceInfo: string = "Web Session"
+) {
+  const { prisma } = await import("./db");
+  const { getTodayDateString } = await import("./utils");
+
+  const today = getTodayDateString();
+  const existing = await prisma.attendance.findUnique({
+    where: {
+      userId_date: {
+        userId,
+        date: today,
+      },
+    },
+    include: {
+      breaks: { orderBy: { startTime: "asc" } },
+      corrections: { orderBy: { createdAt: "desc" } },
+    },
+  });
+
+  if (existing) {
+    if (!existing.checkIn && existing.status !== "ON_LEAVE") {
+      const now = new Date();
+      const status = await determineCheckInStatus(now);
+      return await prisma.attendance.update({
+        where: { id: existing.id },
+        data: {
+          checkIn: now,
+          status,
+          ipAddress,
+          deviceInfo,
+        },
+        include: {
+          breaks: { orderBy: { startTime: "asc" } },
+          corrections: { orderBy: { createdAt: "desc" } },
+        },
+      });
+    }
+    return existing;
+  }
+
+  const now = new Date();
+  const status = await determineCheckInStatus(now);
+  return await prisma.attendance.create({
+    data: {
+      userId,
+      date: today,
+      checkIn: now,
+      status,
+      ipAddress,
+      deviceInfo,
+    },
+    include: {
+      breaks: { orderBy: { startTime: "asc" } },
+      corrections: { orderBy: { createdAt: "desc" } },
+    },
+  });
+}
+

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword, signSessionToken } from "@/lib/auth";
 import { logAuditAction } from "@/lib/audit";
+import { ensureUserCheckedInToday } from "@/lib/attendance";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,11 +42,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update last active time
+    const ipAddress = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const deviceInfo = req.headers.get("user-agent") || "Web Browser";
+
+    // Update last active time & auto check-in so user state is WORKING upon login
     await prisma.user.update({
       where: { id: user.id },
       data: { lastActiveAt: new Date() },
     });
+    await ensureUserCheckedInToday(user.id, ipAddress, deviceInfo);
 
     // Create session token
     const token = await signSessionToken({

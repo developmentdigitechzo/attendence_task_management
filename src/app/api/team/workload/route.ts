@@ -22,14 +22,12 @@ export async function GET(req: NextRequest) {
   if (user.role === "SUPER_ADMIN") {
     if (requestedManagerId) whereClause.managerId = requestedManagerId;
   } else {
+    // For Team Leader (MANAGER), strictly restrict to employees assigned to that Team Leader
     whereClause.role = "EMPLOYEE";
-    whereClause.OR = [
-      { managerId: user.id },
-      { departmentId: user.departmentId },
-    ];
+    whereClause.managerId = user.id;
   }
 
-  let members = await prisma.user.findMany({
+  const members = await prisma.user.findMany({
     where: whereClause,
     include: {
       department: true,
@@ -48,28 +46,6 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { name: "asc" },
   });
-
-  if (members.length === 0 && user.role !== "SUPER_ADMIN") {
-    members = await prisma.user.findMany({
-      where: { status: "ACTIVE", role: "EMPLOYEE" },
-      include: {
-        department: true,
-        tasksAssigned: {
-          include: {
-            project: { select: { name: true } },
-          },
-        },
-        attendances: {
-          where: { date: today },
-          include: { breaks: true },
-        },
-        dailyUpdates: {
-          where: { date: today },
-        },
-      },
-      orderBy: { name: "asc" },
-    });
-  }
 
   const now = new Date();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Users,
   Search,
@@ -16,15 +17,28 @@ import {
 } from "lucide-react";
 import EmployeeModal from "@/components/employees/EmployeeModal";
 import { formatDateDisplay } from "@/lib/utils";
+import { confirmAction } from "@/components/ui/ConfirmDialog";
 
 export default function AdminEmployeesPage() {
+  const searchParams = useSearchParams();
+  const urlSearch = searchParams.get("search") || "";
+  const urlDept = searchParams.get("departmentId") || "ALL";
+
   const [employees, setEmployees] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("ALL");
+  const [search, setSearch] = useState(urlSearch);
+  const [departmentFilter, setDepartmentFilter] = useState(urlDept);
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
+
+  // Sync state if URL query params change
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q !== null) setSearch(q);
+    const d = searchParams.get("departmentId");
+    if (d !== null) setDepartmentFilter(d);
+  }, [searchParams]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any | null>(null);
@@ -63,12 +77,16 @@ export default function AdminEmployeesPage() {
 
   const handleToggleStatus = async (emp: any) => {
     const newStatus = emp.status === "ACTIVE" ? "DEACTIVATED" : "ACTIVE";
-    if (
-      !confirm(
-        `Are you sure you want to ${newStatus.toLowerCase()} ${emp.name}?`
-      )
-    )
-      return;
+    const isDeactivate = newStatus === "DEACTIVATED";
+    const ok = await confirmAction({
+      title: isDeactivate ? "Deactivate Employee" : "Activate Employee",
+      message: `Are you sure you want to ${isDeactivate ? "deactivate" : "activate"} ${emp.name}? ${
+        isDeactivate ? "They will not be able to log in while deactivated." : "They will regain system access."
+      }`,
+      confirmText: isDeactivate ? "Deactivate" : "Activate",
+      variant: isDeactivate ? "danger" : "default",
+    });
+    if (!ok) return;
 
     try {
       const res = await fetch("/api/employees", {

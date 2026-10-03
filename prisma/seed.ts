@@ -470,32 +470,50 @@ async function main() {
     },
   });
 
-  // Historical attendance records for the past 6 working days (Sep 9 - Sep 15, excluding Sun Sep 13)
-  const pastDates = [
-    { date: "2026-09-15", checkInH: 9, checkInM: 5, checkOutH: 18, checkOutM: 10, late: false },
-    { date: "2026-09-14", checkInH: 9, checkInM: 12, checkOutH: 18, checkOutM: 0, late: false },
-    { date: "2026-09-12", checkInH: 9, checkInM: 22, checkOutH: 18, checkOutM: 15, late: true },
-    { date: "2026-09-11", checkInH: 9, checkInM: 4, checkOutH: 18, checkOutM: 5, late: false },
-    { date: "2026-09-10", checkInH: 9, checkInM: 7, checkOutH: 18, checkOutM: 20, late: false },
-    { date: "2026-09-09", checkInH: 9, checkInM: 14, checkOutH: 18, checkOutM: 0, late: false },
-  ];
+  // Historical attendance records for all working days in September 2026 (26 working days, Mon-Sat)
+  const sundays = new Set(["2026-09-06", "2026-09-13", "2026-09-20", "2026-09-27"]);
+  const septemberWorkingDays: string[] = [];
+  for (let day = 1; day <= 30; day++) {
+    const dayStr = String(day).padStart(2, "0");
+    const dStr = `2026-09-${dayStr}`;
+    if (!sundays.has(dStr)) {
+      septemberWorkingDays.push(dStr);
+    }
+  }
 
-  const employees = [empJohn, empSarah, empPriya, empArun, manager];
+  const allStaff = [admin, manager, empJohn, empSarah, empPriya, empArun];
 
-  for (const emp of employees) {
-    for (const d of pastDates) {
-      // make Sarah have 1 late day and Arun have 1 late day
-      const isLate = (emp.id === empSarah.id && d.late) || (emp.id === empArun.id && d.date === "2026-09-11");
-      const inM = isLate ? 25 : d.checkInM;
+  for (const emp of allStaff) {
+    for (const d of septemberWorkingDays) {
+      if (emp.id === empArun.id && d === "2026-09-16") {
+        await prisma.attendance.create({
+          data: {
+            userId: emp.id,
+            date: d,
+            status: "ON_LEAVE",
+            workDurationMinutes: 0,
+            breakDurationMinutes: 0,
+            notes: "Approved Casual Leave",
+          },
+        });
+        continue;
+      }
+
+      const isLate =
+        (emp.id === empSarah.id && (d === "2026-09-12" || d === "2026-09-25")) ||
+        (emp.id === empArun.id && (d === "2026-09-11" || d === "2026-09-22"));
+
+      const inM = isLate ? 25 : 5 + (parseInt(emp.employeeId.slice(-1) || "1", 10) % 7);
+      const outM = 10 + (parseInt(emp.employeeId.slice(-1) || "1", 10) % 10);
       const status = isLate ? "LATE" : "PRESENT";
-      const inDate = new Date(`${d.date}T03:${String(inM).padStart(2, "0")}:00Z`);
-      const outDate = new Date(`${d.date}T12:${String(d.checkOutM).padStart(2, "0")}:00Z`);
-      const workMin = 500;
+      const inDate = new Date(`${d}T03:${String(inM).padStart(2, "0")}:00Z`);
+      const outDate = new Date(`${d}T12:${String(outM).padStart(2, "0")}:00Z`);
+      const workMin = isLate ? 480 : 500;
 
       await prisma.attendance.create({
         data: {
           userId: emp.id,
-          date: d.date,
+          date: d,
           checkIn: inDate,
           checkOut: outDate,
           status,

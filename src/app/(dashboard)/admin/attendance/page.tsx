@@ -16,6 +16,7 @@ import {
   Download,
 } from "lucide-react";
 import { formatTimeIST, formatMinutes, getTodayDateString } from "@/lib/utils";
+import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function AdminAttendancePage() {
   const [selectedDate, setSelectedDate] = useState(getTodayDateString());
@@ -67,8 +68,18 @@ export default function AdminAttendancePage() {
     correctionId: string,
     action: "APPROVE" | "REJECT"
   ) => {
+    const isApprove = action === "APPROVE";
+    const notes = await promptAction({
+      title: isApprove ? "Approve Attendance Correction" : "Reject Attendance Correction",
+      message: `Are you sure you want to ${isApprove ? "approve" : "reject"} this attendance correction request?`,
+      confirmText: isApprove ? "Approve" : "Reject",
+      variant: isApprove ? "default" : "danger",
+      noteLabel: "Review Note (optional)",
+      notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
+    });
+    if (notes === null) return;
+
     try {
-      const notes = prompt(`Notes for ${action.toLowerCase()}ing:`) || "";
       const res = await fetch("/api/attendance/corrections", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -100,6 +111,20 @@ export default function AdminAttendancePage() {
     notCheckedIn: 0,
   };
 
+  const getRosterExportUrl = (format: "csv" | "excel") => {
+    const params = new URLSearchParams();
+    params.set("type", "roster");
+    params.set("format", format);
+    params.set("date", selectedDate);
+    if (departmentFilter && departmentFilter !== "ALL") {
+      params.set("departmentId", departmentFilter);
+    }
+    if (statusFilter && statusFilter !== "ALL") {
+      params.set("status", statusFilter);
+    }
+    return `/api/reports/export?${params.toString()}`;
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Title & Export Buttons */}
@@ -115,7 +140,7 @@ export default function AdminAttendancePage() {
 
         <div className="flex items-center gap-2">
           <a
-            href="/api/reports/export?type=weekly&format=csv"
+            href={getRosterExportUrl("csv")}
             download
             className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-xs transition flex items-center gap-1.5"
           >
@@ -123,7 +148,7 @@ export default function AdminAttendancePage() {
             <span>Export CSV</span>
           </a>
           <a
-            href="/api/reports/export?type=weekly&format=excel"
+            href={getRosterExportUrl("excel")}
             download
             className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5"
           >

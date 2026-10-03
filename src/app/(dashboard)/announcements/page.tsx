@@ -76,6 +76,20 @@ export default function EmployeeAnnouncementsPage() {
               <div className="mt-3 text-xs text-slate-700 leading-relaxed whitespace-pre-line">
                 {item.content}
               </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
+                <span className="flex items-center gap-1.5">
+                  Audience:{" "}
+                  {item.audience === "DEPARTMENT" && item.department?.name ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold text-[11px]">
+                      <Building className="w-3 h-3 text-indigo-500" />
+                      {item.department.name} Department
+                    </span>
+                  ) : (
+                    <span className="text-slate-600 font-medium">All Company Staff</span>
+                  )}
+                </span>
+              </div>
             </div>
           ))
         )}

@@ -30,6 +30,7 @@ export default function LeadTeamWorkloadPage() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [preselectedAssignee, setPreselectedAssignee] = useState<string>("");
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const fetchWorkload = async () => {
     setLoading(true);
@@ -108,6 +109,13 @@ export default function LeadTeamWorkloadPage() {
           <span>Delegate New Task</span>
         </button>
       </div>
+
+      {actionNotice && (
+        <div className="p-3 bg-emerald-50 text-emerald-800 text-xs rounded-xl flex items-center gap-2 border border-emerald-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{actionNotice}</span>
+        </div>
+      )}
 
       {/* Capacity & Live Presence Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
@@ -386,7 +394,9 @@ export default function LeadTeamWorkloadPage() {
           onClose={() => setIsCreateTaskOpen(false)}
           onSuccess={() => {
             fetchWorkload();
+            setActionNotice("Task assigned successfully to team member! 🚀");
             setIsCreateTaskOpen(false);
+            setTimeout(() => setActionNotice(null), 3500);
           }}
           preselectedAssigneeId={preselectedAssignee}
         />

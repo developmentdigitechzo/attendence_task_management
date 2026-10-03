@@ -19,6 +19,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { formatTimeIST } from "@/lib/utils";
+import { confirmAction } from "@/components/ui/ConfirmDialog";
 
 const EMOJI_LIST = ["👍", "❤️", "🚀", "🎉", "🔥", "👀", "🙌"];
 
@@ -191,7 +192,13 @@ export default function ChatPage() {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm("Delete this message?")) return;
+    const ok = await confirmAction({
+      title: "Delete Message",
+      message: "Are you sure you want to delete this message? This action cannot be undone.",
+      confirmText: "Delete",
+      variant: "danger",
+    });
+    if (!ok) return;
     try {
       await fetch(`/api/chat/messages?messageId=${messageId}`, {
         method: "DELETE",

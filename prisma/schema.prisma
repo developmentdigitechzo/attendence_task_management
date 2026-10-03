@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +14,7 @@ model User {
   passwordHash     String
   name             String
   phone            String?
-  avatarUrl        String?
+  avatarUrl        String?   @db.Text
   departmentId     String?
   designation      String?
   role             String    @default("EMPLOYEE") // SUPER_ADMIN, MANAGER, EMPLOYEE
@@ -24,8 +24,8 @@ model User {
   workLocation     String?   @default("Office")
   workingHours     String?   @default("09:00 - 18:00")
   emergencyContact String?
-  skills           String?
-  bio              String?
+  skills           String?   @db.Text
+  bio              String?   @db.Text
   lastActiveAt     DateTime  @default(now())
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -56,7 +56,7 @@ model Department {
   id          String   @id @default(cuid())
   name        String   @unique
   code        String   @unique
-  description String?
+  description String?  @db.Text
   createdAt   DateTime @default(now())
 
   users         User[]
@@ -74,7 +74,7 @@ model Attendance {
   breakDurationMinutes Int       @default(0)
   ipAddress            String?
   deviceInfo           String?
-  notes                String?
+  notes                String?   @db.Text
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -92,7 +92,7 @@ model Break {
   startTime       DateTime   @default(now())
   endTime         DateTime?
   durationMinutes Int        @default(0)
-  reason          String?
+  reason          String?    @db.Text
   createdAt       DateTime   @default(now())
 
   attendance      Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
@@ -106,10 +106,10 @@ model AttendanceCorrection {
   requestedDate     String      // YYYY-MM-DD
   requestedCheckIn  String?     // e.g. "09:00"
   requestedCheckOut String?     // e.g. "18:00"
-  reason            String
+  reason            String      @db.Text
   status            String      @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedById      String?
-  reviewNotes       String?
+  reviewNotes       String?     @db.Text
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
@@ -121,7 +121,7 @@ model Project {
   id          String    @id @default(cuid())
   name        String
   client      String?
-  description String?
+  description String?   @db.Text
   managerId   String?
   status      String    @default("ACTIVE") // PLANNING, ACTIVE, ON_HOLD, COMPLETED
   startDate   DateTime?
@@ -138,7 +138,7 @@ model Milestone {
   id          String    @id @default(cuid())
   projectId   String
   name        String
-  description String?
+  description String?   @db.Text
   startDate   DateTime?
   dueDate     DateTime?
   status      String    @default("IN_PROGRESS") // UPCOMING, IN_PROGRESS, COMPLETED
@@ -166,7 +166,7 @@ model Task {
   id          String    @id @default(cuid())
   taskId      String    @unique // e.g. TSK-101
   title       String
-  description String?
+  description String?   @db.Text
   projectId   String?
   milestoneId String?
   assignedToId String?
@@ -191,7 +191,7 @@ model TaskComment {
   id        String   @id @default(cuid())
   taskId    String
   userId    String
-  content   String
+  content   String   @db.Text
   createdAt DateTime @default(now())
 
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
@@ -202,7 +202,7 @@ model TaskAttachment {
   id        String   @id @default(cuid())
   taskId    String
   fileName  String
-  fileUrl   String
+  fileUrl   String   @db.Text
   fileSize  Int?
   fileType  String?
   createdAt DateTime @default(now())
@@ -214,10 +214,10 @@ model DailyUpdate {
   id            String   @id @default(cuid())
   userId        String
   date          String   // YYYY-MM-DD
-  completedWork String
-  pendingWork   String
-  blockedWork   String?
-  notes         String?
+  completedWork String   @db.Text
+  pendingWork   String   @db.Text
+  blockedWork   String?  @db.Text
+  notes         String?  @db.Text
   createdAt     DateTime @default(now())
 
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -228,7 +228,7 @@ model DailyUpdate {
 model Channel {
   id          String   @id @default(cuid())
   name        String   @unique // e.g. general, development, marketing
-  topic       String?
+  topic       String?  @db.Text
   isPrivate   Boolean  @default(false)
   createdById String
   createdAt   DateTime @default(now())
@@ -254,8 +254,8 @@ model Message {
   senderId    String
   channelId   String?   // null if direct message
   recipientId String?   // recipient user ID for direct message
-  content     String
-  attachments String?
+  content     String    @db.Text
+  attachments String?   @db.Text
   isPinned    Boolean   @default(false)
   replyToId   String?
   editedAt    DateTime?
@@ -283,9 +283,9 @@ model Notification {
   id        String   @id @default(cuid())
   userId    String
   title     String
-  message   String
+  message   String   @db.Text
   type      String   @default("SYSTEM") // TASK_ASSIGNED, DEADLINE, MENTION, ANNOUNCEMENT, LEAVE_STATUS, CORRECTION_STATUS
-  linkUrl   String?
+  linkUrl   String?  @db.Text
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -299,10 +299,10 @@ model LeaveRequest {
   startDate    String   // YYYY-MM-DD
   endDate      String   // YYYY-MM-DD
   totalDays    Int      @default(1)
-  reason       String
+  reason       String   @db.Text
   status       String   @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedById String?
-  reviewNotes  String?
+  reviewNotes  String?  @db.Text
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -312,7 +312,7 @@ model LeaveRequest {
 model Announcement {
   id           String      @id @default(cuid())
   title        String
-  content      String
+  content      String      @db.Text
   createdById  String
   priority     String      @default("NORMAL") // NORMAL, IMPORTANT, URGENT
   audience     String      @default("EVERYONE") // EVERYONE, DEPARTMENT, SPECIFIC
@@ -338,7 +338,7 @@ model AuditLog {
   action     String   // EMPLOYEE_CREATED, ATTENDANCE_CORRECTED, LEAVE_APPROVED, etc.
   targetType String   // USER, ATTENDANCE, TASK, LEAVE, SETTING
   targetId   String?
-  details    String?
+  details    String?  @db.Text
   ipAddress  String?
   createdAt  DateTime @default(now())
 
@@ -348,18 +348,18 @@ model AuditLog {
 model CompanySetting {
   id          String   @id @default(cuid())
   key         String   @unique
-  value       String
-  description String?
+  value       String   @db.Text
+  description String?  @db.Text
   updatedAt   DateTime @updatedAt
 }
 
 model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
-  endpoint  String   @unique
+  endpoint  String   @unique(length: 255) @db.VarChar(500)
   p256dh    String
   auth      String
-  userAgent String?
+  userAgent String?  @db.Text
   createdAt DateTime @default(now())
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

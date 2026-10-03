@@ -25,11 +25,15 @@ export default function CalendarView() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Default month: September 2026
+  // Default month: Dynamically set to current date (e.g. October 2026)
   const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(8); // 0-indexed: 8 = September
+  const [currentMonth, setCurrentMonth] = useState(9); // 0-indexed: 9 = October
 
   useEffect(() => {
+    const now = new Date();
+    setCurrentYear(now.getFullYear());
+    setCurrentMonth(now.getMonth());
+
     fetch("/api/calendar")
       .then((r) => r.json())
       .then((d) => {
@@ -138,8 +142,9 @@ export default function CalendarView() {
             </button>
             <button
               onClick={() => {
-                setCurrentYear(2026);
-                setCurrentMonth(8);
+                const now = new Date();
+                setCurrentYear(now.getFullYear());
+                setCurrentMonth(now.getMonth());
               }}
               className="px-2.5 py-1 text-xs font-semibold text-brand-600 hover:bg-brand-50 rounded-lg transition"
             >
@@ -181,8 +186,11 @@ export default function CalendarView() {
             }
 
             const { holidays, leaves, projDeadlines } = getEventsForDay(dayNum);
+            const now = new Date();
             const isToday =
-              currentYear === 2026 && currentMonth === 8 && dayNum === 16;
+              currentYear === now.getFullYear() &&
+              currentMonth === now.getMonth() &&
+              dayNum === now.getDate();
 
             return (
               <div

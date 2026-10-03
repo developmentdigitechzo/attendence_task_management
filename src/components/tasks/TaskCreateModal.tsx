@@ -24,6 +24,12 @@ export default function TaskCreateModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (preselectedAssigneeId) {
+      setAssignedToId(preselectedAssigneeId);
+    }
+  }, [preselectedAssigneeId]);
+
+  useEffect(() => {
     // Load projects and employees
     Promise.all([
       fetch("/api/projects").then((r) => r.json()),
@@ -32,9 +38,12 @@ export default function TaskCreateModal({
       .then(([projData, empData]) => {
         setProjects(projData.projects || []);
         setEmployees(empData.employees || []);
+        if (preselectedAssigneeId) {
+          setAssignedToId(preselectedAssigneeId);
+        }
       })
       .catch(console.error);
-  }, []);
+  }, [preselectedAssigneeId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

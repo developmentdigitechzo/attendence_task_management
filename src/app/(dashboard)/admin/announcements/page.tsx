@@ -17,6 +17,7 @@ import { formatDateDisplay } from "@/lib/utils";
 export default function AdminAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
+  const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -28,12 +29,15 @@ export default function AdminAnnouncementsPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = async (deptId?: string) => {
     setLoading(true);
     try {
+      const filter = deptId !== undefined ? deptId : selectedDeptFilter;
+      const url = filter && filter !== "ALL" ? `/api/announcements?departmentId=${filter}` : "/api/announcements";
       const [annRes, deptRes] = await Promise.all([
-        fetch("/api/announcements"),
+        fetch(url),
         fetch("/api/departments"),
       ]);
       if (annRes.ok) {
@@ -53,32 +57,57 @@ export default function AdminAnnouncementsPage() {
     fetchAnnouncements();
   }, []);
 
+  const handleDeptFilterChange = (deptId: string) => {
+    setSelectedDeptFilter(deptId);
+    fetchAnnouncements(deptId);
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 
+    if (audience === "DEPARTMENT" && (!departmentId || departmentId.trim() === "")) {
+      setError("Please select a target department for this announcement.");
+      return;
+    }
+
     setSubmitting(true);
+    setError(null);
     try {
       const res = await fetch("/api/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
-          content,
+          title: title.trim(),
+          content: content.trim(),
           priority,
           audience,
           departmentId: audience === "DEPARTMENT" ? departmentId : null,
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         setIsModalOpen(false);
         setTitle("");
         setContent("");
-        setMessage("Announcement broadcasted successfully to staff.");
+        setPriority("NORMAL");
+        setAudience("EVERYONE");
+        setDepartmentId("");
+        setError(null);
+        setMessage(
+          audience === "DEPARTMENT"
+            ? "Announcement sent successfully to the selected department."
+            : "Announcement broadcasted successfully to all staff."
+        );
         fetchAnnouncements();
-        setTimeout(() => setMessage(null), 3000);
+        setTimeout(() => setMessage(null), 4000);
+      } else {
+        setError(data.error || "Failed to post announcement.");
       }
+    } catch {
+      setError("An unexpected error occurred while posting.");
     } finally {
       setSubmitting(false);
     }
@@ -97,15 +126,40 @@ export default function AdminAnnouncementsPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Post Announcement</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Department Filter */}
+          <select
+            value={selectedDeptFilter}
+            onChange={(e) => handleDeptFilterChange(e.target.value)}
+            className="px-3 py-2 bg-white border border-slate-200 text-xs font-medium rounded-xl shadow-xs text-slate-700 outline-none focus:ring-2 focus:ring-brand-100"
+          >
+            <option value="ALL">All Departments</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              setError(null);
+              setIsModalOpen(true);
+            }}
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Post Announcement</span>
+          </button>
+        </div>
       </div>
 
+      {message && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{message}</span>
+        </div>
+      )}
 
       {/* Announcements Stream */}
       <div className="space-y-4">
@@ -113,7 +167,7 @@ export default function AdminAnnouncementsPage() {
           <div className="py-12 text-center text-xs text-slate-400">Loading notices...</div>
         ) : announcements.length === 0 ? (
           <div className="py-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">
-            No active announcements. Click "Post Announcement" to broadcast to the team.
+            No active announcements found. Click "Post Announcement" to broadcast to the team.
           </div>
         ) : (
           announcements.map((item) => (
@@ -158,7 +212,17 @@ export default function AdminAnnouncementsPage() {
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Audience: <strong>{item.audience === "EVERYONE" ? "All Company Staff" : item.department?.name || "Department"}</strong></span>
+                <span className="flex items-center gap-1.5">
+                  Audience:{" "}
+                  {item.audience === "DEPARTMENT" && item.department?.name ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold text-[11px]">
+                      <Building className="w-3 h-3 text-indigo-500" />
+                      {item.department.name} Department Only
+                    </span>
+                  ) : (
+                    <strong className="text-slate-700">All Company Staff</strong>
+                  )}
+                </span>
               </div>
             </div>
           ))
@@ -179,6 +243,13 @@ export default function AdminAnnouncementsPage() {
               </button>
             </div>
 
+            {error && (
+              <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <form onSubmit={handleCreate} className="mt-4 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -188,7 +259,10 @@ export default function AdminAnnouncementsPage() {
                   type="text"
                   required
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="e.g. Office schedule change for Friday"
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
                 />
@@ -202,7 +276,10 @@ export default function AdminAnnouncementsPage() {
                   required
                   rows={4}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (error) setError(null);
+                  }}
                   placeholder="Type the full announcement message..."
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none resize-none"
                 />
@@ -230,7 +307,13 @@ export default function AdminAnnouncementsPage() {
                   </label>
                   <select
                     value={audience}
-                    onChange={(e) => setAudience(e.target.value)}
+                    onChange={(e) => {
+                      setAudience(e.target.value);
+                      if (e.target.value !== "DEPARTMENT") {
+                        setDepartmentId("");
+                      }
+                      if (error) setError(null);
+                    }}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none"
                   >
                     <option value="EVERYONE">Everyone</option>
@@ -242,12 +325,16 @@ export default function AdminAnnouncementsPage() {
               {audience === "DEPARTMENT" && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Select Target Department
+                    Select Target Department *
                   </label>
                   <select
+                    required
                     value={departmentId}
-                    onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                    onChange={(e) => {
+                      setDepartmentId(e.target.value);
+                      if (error) setError(null);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500"
                   >
                     <option value="">Choose department...</option>
                     {departments.map((d) => (
@@ -256,6 +343,9 @@ export default function AdminAnnouncementsPage() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Only active employees in this selected department will receive and see this announcement.
+                  </p>
                 </div>
               )}
 

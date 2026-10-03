@@ -11,6 +11,7 @@ import {
   AlertCircle,
   User,
 } from "lucide-react";
+import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function AdminLeavePage() {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -39,7 +40,16 @@ export default function AdminLeavePage() {
   }, [statusFilter]);
 
   const handleReviewLeave = async (leaveId: string, action: "APPROVE" | "REJECT") => {
-    const reviewNotes = prompt(`Enter review note for ${action.toLowerCase()}ing:`) || "";
+    const isApprove = action === "APPROVE";
+    const reviewNotes = await promptAction({
+      title: isApprove ? "Approve Leave Request" : "Reject Leave Request",
+      message: `Are you sure you want to ${isApprove ? "approve" : "reject"} this leave request?`,
+      confirmText: isApprove ? "Approve" : "Reject",
+      variant: isApprove ? "default" : "danger",
+      noteLabel: "Review Note (optional)",
+      notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
+    });
+    if (reviewNotes === null) return;
     try {
       const res = await fetch("/api/leave", {
         method: "PATCH",

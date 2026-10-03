@@ -18,8 +18,11 @@ import {
   FolderGit2,
   Activity,
   Layers,
+  Plus,
 } from "lucide-react";
 import { formatTimeIST, formatMinutes, getTodayDateString } from "@/lib/utils";
+import { promptAction } from "@/components/ui/ConfirmDialog";
+import TaskCreateModal from "@/components/tasks/TaskCreateModal";
 
 export default function TeamLeadDashboardPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -30,6 +33,8 @@ export default function TeamLeadDashboardPage() {
   const [standupUpdates, setStandupUpdates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [preselectedAssignee, setPreselectedAssignee] = useState<string>("");
 
   const fetchLeadData = async () => {
     try {
@@ -98,8 +103,15 @@ export default function TeamLeadDashboardPage() {
   };
 
   const handleRequestChanges = async (taskId: string) => {
-    const feedback = prompt("Enter feedback / requested changes:") || "";
-    if (!feedback) return;
+    const feedback = await promptAction({
+      title: "Request Task Changes",
+      message: "Specify feedback or required modifications for the team member before they resubmit.",
+      confirmText: "Request Changes",
+      variant: "danger",
+      noteLabel: "Feedback / Changes Requested",
+      notePlaceholder: "Detail what needs to be changed or improved...",
+    });
+    if (!feedback || !feedback.trim()) return;
     try {
       await fetch("/api/tasks/comments", {
         method: "POST",
@@ -244,16 +256,33 @@ export default function TeamLeadDashboardPage() {
                   Track who is free, who is balanced, and who has too many active deliverables
                 </p>
               </div>
-              <Link
-                href="/lead/team"
-                className="text-xs font-semibold text-brand-600 hover:text-brand-800 flex items-center gap-1"
-              >
-                <span>View Full Team</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setPreselectedAssignee("");
+                    setIsCreateTaskOpen(true);
+                  }}
+                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Assign Task</span>
+                </button>
+                <Link
+                  href="/lead/team"
+                  className="text-xs font-semibold text-slate-600 hover:text-brand-600 border border-slate-200 hover:border-brand-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1 bg-slate-50/50 hover:bg-brand-50/50"
+                >
+                  <span>Full Matrix</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {teamWorkload.length === 0 ? (
+              <div className="py-12 text-center text-xs text-slate-400 bg-slate-50/60 rounded-xl border border-dashed border-slate-200 mt-4">
+                No employees are currently assigned to your team. Contact an administrator to assign team members to your leadership.
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {teamWorkload.map((member) => (
                 <div
                   key={member.id}
@@ -324,9 +353,8 @@ export default function TeamLeadDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Capacity Bar */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500 font-medium">Workload Capacity:</span>
+                  {/* Capacity Bar & Action */}
+                  <div className="pt-2.5 mt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px]">
                     <span
                       className={`font-bold px-2 py-0.5 rounded text-[10px] ${
                         member.capacityStatus === "AVAILABLE"
@@ -337,15 +365,27 @@ export default function TeamLeadDashboardPage() {
                       }`}
                     >
                       {member.capacityStatus === "AVAILABLE"
-                        ? "Available for Tasks"
+                        ? "Available"
                         : member.capacityStatus === "BALANCED"
-                        ? "Balanced Load"
-                        : "High Workload ⚡"}
+                        ? "Balanced"
+                        : "High Load ⚡"}
                     </span>
+
+                    <button
+                      onClick={() => {
+                        setPreselectedAssignee(member.id);
+                        setIsCreateTaskOpen(true);
+                      }}
+                      className="px-2.5 py-1 bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white rounded-lg text-[11px] font-semibold transition flex items-center gap-1 border border-brand-200 hover:border-brand-600 shadow-2xs"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Assign Task</span>
+                    </button>
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Daily Standups / Team EOD Stream */}
@@ -519,6 +559,19 @@ export default function TeamLeadDashboardPage() {
           </div>
         </div>
       </div>
+      {/* Task Creation Modal */}
+      {isCreateTaskOpen && (
+        <TaskCreateModal
+          onClose={() => setIsCreateTaskOpen(false)}
+          onSuccess={() => {
+            fetchLeadData();
+            setActionMessage("New task successfully created and assigned to team member! 🚀");
+            setIsCreateTaskOpen(false);
+            setTimeout(() => setActionMessage(null), 3500);
+          }}
+          preselectedAssigneeId={preselectedAssignee}
+        />
+      )}
     </div>
   );
 }

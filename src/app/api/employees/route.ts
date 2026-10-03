@@ -42,6 +42,14 @@ export async function GET(req: NextRequest) {
     where.status = { not: "ARCHIVED" };
   }
 
+  // Managers only see their assigned team members (and themselves)
+  if (user.role === "MANAGER") {
+    where.OR = [
+      { managerId: user.id },
+      { id: user.id },
+    ];
+  }
+
   const employees = await prisma.user.findMany({
     where,
     include: {
@@ -110,13 +118,21 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await hashPassword(password);
 
+    const cleanPhone = phone ? String(phone).replace(/\D/g, "").slice(0, 10) : null;
+    if (phone && cleanPhone && cleanPhone.length !== 10) {
+      return NextResponse.json(
+        { error: "Phone number must be exactly 10 digits." },
+        { status: 400 }
+      );
+    }
+
     const newEmployee = await prisma.user.create({
       data: {
         employeeId,
         name,
         email: email.toLowerCase().trim(),
         passwordHash,
-        phone,
+        phone: cleanPhone,
         departmentId: departmentId || null,
         designation,
         role,
@@ -188,6 +204,17 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Employee ID is required." }, { status: 400 });
     }
 
+    let cleanPhone = phone;
+    if (phone !== undefined) {
+      cleanPhone = phone ? String(phone).replace(/\D/g, "").slice(0, 10) : null;
+      if (phone && cleanPhone && cleanPhone.length !== 10) {
+        return NextResponse.json(
+          { error: "Phone number must be exactly 10 digits." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Permission checks: regular employees can only edit limited own profile fields
     if (currentUser.role === "EMPLOYEE") {
       if (currentUser.id !== id) {
@@ -197,7 +224,7 @@ export async function PATCH(req: NextRequest) {
       // Employee can update phone, bio, skills
       const updated = await prisma.user.update({
         where: { id },
-        data: { phone, bio, skills },
+        data: { phone: cleanPhone, bio, skills },
       });
 
       return NextResponse.json({ success: true, employee: updated });
@@ -211,7 +238,7 @@ export async function PATCH(req: NextRequest) {
     const updateData: any = {};
     if (status) updateData.status = status;
     if (name) updateData.name = name;
-    if (phone !== undefined) updateData.phone = phone;
+    if (cleanPhone !== undefined) updateData.phone = cleanPhone;
     if (designation !== undefined) updateData.designation = designation;
     if (departmentId !== undefined) updateData.departmentId = departmentId || null;
     if (managerId !== undefined) updateData.managerId = managerId || null;

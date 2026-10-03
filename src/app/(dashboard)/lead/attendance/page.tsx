@@ -15,6 +15,7 @@ import {
   Filter,
 } from "lucide-react";
 import { formatTimeIST, formatMinutes, getTodayDateString, formatDateDisplay } from "@/lib/utils";
+import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function LeadAttendancePage() {
   const [workload, setWorkload] = useState<any[]>([]);
@@ -56,8 +57,16 @@ export default function LeadAttendancePage() {
     correctionId: string,
     action: "APPROVE" | "REJECT"
   ) => {
-    const reviewNotes =
-      prompt(`Enter remark for ${action.toLowerCase()}ing:`) || "";
+    const isApprove = action === "APPROVE";
+    const reviewNotes = await promptAction({
+      title: isApprove ? "Approve Attendance Correction" : "Reject Attendance Correction",
+      message: `Are you sure you want to ${isApprove ? "approve" : "reject"} this attendance correction request?`,
+      confirmText: isApprove ? "Approve" : "Reject",
+      variant: isApprove ? "default" : "danger",
+      noteLabel: "Review Remark (optional)",
+      notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
+    });
+    if (reviewNotes === null) return;
     try {
       const res = await fetch("/api/attendance/corrections", {
         method: "PATCH",

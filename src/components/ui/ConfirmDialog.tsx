@@ -112,6 +112,12 @@ export default function ConfirmHost() {
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  close(true);
+                }
+              }}
               placeholder={o.notePlaceholder || "Add a remark..."}
               className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none resize-none"
             />

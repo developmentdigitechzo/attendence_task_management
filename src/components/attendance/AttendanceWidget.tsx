@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { formatMinutes, formatTimeIST } from "@/lib/utils";
 import CorrectionModal from "./CorrectionModal";
+import { confirmAction } from "@/components/ui/ConfirmDialog";
 
 interface AttendanceWidgetProps {
   userName: string;
@@ -103,7 +104,13 @@ export default function AttendanceWidget({
   };
 
   const handleCheckOut = async () => {
-    if (!confirm("Are you sure you want to check out for today?")) return;
+    const confirmed = await confirmAction({
+      title: "Confirm Check Out",
+      message: "Are you sure you want to check out for today? This will record your punch out time.",
+      confirmText: "Check Out",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     setActionLoading(true);
     setMessage(null);
     try {

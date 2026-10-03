@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const today = getTodayDateString();
 
-  const attendance = await prisma.attendance.findUnique({
+  let attendance = await prisma.attendance.findUnique({
     where: {
       userId_date: {
         userId: targetUserId,
@@ -36,8 +36,16 @@ export async function GET(req: NextRequest) {
     },
   });
 
+  // Auto check-in logged-in user if not yet checked in today so state is immediately WORKING
+  if (targetUserId === user.id && (!attendance || (!attendance.checkIn && attendance.status !== "ON_LEAVE"))) {
+    const ipAddress = req.headers.get("x-forwarded-for") || "127.0.0.1";
+    const deviceInfo = req.headers.get("user-agent") || "Web Browser";
+    const { ensureUserCheckedInToday } = await import("@/lib/attendance");
+    attendance = await ensureUserCheckedInToday(user.id, ipAddress, deviceInfo);
+  }
+
   // Check if there is an ongoing break
-  const activeBreak = attendance?.breaks.find((b) => b.endTime === null) || null;
+  const activeBreak = attendance?.breaks?.find((b) => b.endTime === null) || null;
 
   return NextResponse.json({
     date: today,

@@ -14,9 +14,11 @@ export async function GET(req: NextRequest) {
   const departmentId = searchParams.get("departmentId");
   const statusFilter = searchParams.get("status");
 
-  // 1. Get all active employees
+  // 1. Get active employees
   const userWhere: any = { status: "ACTIVE" };
-  if (departmentId && departmentId !== "ALL") {
+  if (user.role === "MANAGER") {
+    userWhere.managerId = user.id;
+  } else if (departmentId && departmentId !== "ALL") {
     userWhere.departmentId = departmentId;
   }
 

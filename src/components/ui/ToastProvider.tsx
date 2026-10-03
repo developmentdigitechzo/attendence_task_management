@@ -49,11 +49,11 @@ export const toast = {
 const ToastContext = createContext(toast);
 export const useToast = () => useContext(ToastContext);
 
-const STYLES: Record<ToastType, { box: string; icon: string; Icon: any }> = {
-  success: { box: "border-emerald-200", icon: "text-emerald-600 bg-emerald-50", Icon: CheckCircle2 },
-  error: { box: "border-rose-200", icon: "text-rose-600 bg-rose-50", Icon: AlertCircle },
-  info: { box: "border-slate-200", icon: "text-slate-600 bg-slate-100", Icon: Info },
-  notification: { box: "border-brand-200", icon: "text-brand-600 bg-brand-50", Icon: Bell },
+const STYLES: Record<ToastType, { bg: string; box: string; icon: string; Icon: any }> = {
+  success: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: CheckCircle2 },
+  error: { bg: "bg-rose-700", box: "border-rose-500/50", icon: "text-white bg-white/20 border border-white/20", Icon: AlertCircle },
+  info: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: Info },
+  notification: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: Bell },
 };
 
 // Requests that should never raise automatic toasts (polling / high-frequency / silent)
@@ -175,8 +175,8 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
                 <s.Icon className="w-[18px] h-[18px]" />
               </span>
               <div className="flex-1 min-w-0">
-                {t.title && <p className="text-[13px] font-semibold text-slate-900">{t.title}</p>}
-                <p className="text-[13px] text-slate-600 leading-snug break-words">{t.message}</p>
+                {t.title && <p className="text-[13px] font-semibold text-white">{t.title}</p>}
+                <p className="text-[13px] text-white leading-snug break-words">{t.message}</p>
               </div>
             </>
           );
@@ -184,10 +184,10 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
             <div
               key={t.id}
               role={t.type === "error" ? "alert" : "status"}
-              className={`pointer-events-auto flex items-start gap-3 bg-white border ${s.box} rounded-xl shadow-lg shadow-slate-900/10 p-3 animate-in fade-in slide-in-from-bottom-2 duration-200`}
+              className={`pointer-events-auto flex items-start gap-3 ${s.bg} text-white border ${s.box} rounded-xl shadow-2xl shadow-black/40 p-3.5 animate-in fade-in slide-in-from-bottom-2 duration-200`}
             >
               {t.href ? (
-                <a href={t.href} onClick={() => dismiss(t.id)} className="flex items-start gap-3 flex-1 min-w-0">
+                <a href={t.href} onClick={() => dismiss(t.id)} className="flex items-start gap-3 flex-1 min-w-0 text-white">
                   {Content}
                 </a>
               ) : (
@@ -196,7 +196,7 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
               <button
                 onClick={() => dismiss(t.id)}
                 aria-label="Dismiss"
-                className="shrink-0 p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100"
+                className="shrink-0 p-1 text-white/80 hover:text-white rounded-md hover:bg-white/20 transition"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

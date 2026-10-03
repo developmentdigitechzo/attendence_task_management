@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Roboto_Slab } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/ui/ToastProvider";
+import ConfirmHost from "@/components/ui/ConfirmDialog";
 
 const body = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -37,7 +38,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${body.variable} ${display.variable}`}>
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased font-sans">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <ConfirmHost />
+        </ToastProvider>
       </body>
     </html>
   );

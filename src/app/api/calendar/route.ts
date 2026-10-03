@@ -24,7 +24,23 @@ export async function GET() {
     select: { id: true, name: true, deadline: true, client: true },
   });
 
+  const announcementsWhere: any = {};
+  if (user.role !== "SUPER_ADMIN") {
+    const orConditions: any[] = [
+      { audience: "EVERYONE" },
+      { createdById: user.id },
+    ];
+    if (user.departmentId) {
+      orConditions.push({
+        audience: "DEPARTMENT",
+        departmentId: user.departmentId,
+      });
+    }
+    announcementsWhere.OR = orConditions;
+  }
+
   const announcements = await prisma.announcement.findMany({
+    where: announcementsWhere,
     orderBy: { createdAt: "desc" },
     take: 5,
   });
