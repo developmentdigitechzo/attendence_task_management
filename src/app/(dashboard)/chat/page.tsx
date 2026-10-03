@@ -16,6 +16,7 @@ import {
   X,
   User,
   MoreVertical,
+  ArrowLeft,
 } from "lucide-react";
 import { formatTimeIST } from "@/lib/utils";
 
@@ -27,6 +28,7 @@ export default function ChatPage() {
   const [directContacts, setDirectContacts] = useState<any[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [activeRecipientId, setActiveRecipientId] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<"channels" | "chat">("chat");
   const [messages, setMessages] = useState<any[]>([]);
   const [messageText, setMessageText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -221,7 +223,11 @@ export default function ChatPage() {
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs flex h-[calc(100vh-7rem)] overflow-hidden panel-hover">
       {/* Left Chat Sidebar (Channels & DMs) */}
-      <div className="w-64 sm:w-72 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shrink-0">
+      <div
+        className={`w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shrink-0 ${
+          mobileTab === "chat" ? "hidden md:flex" : "flex"
+        }`}
+      >
         {/* Workspace Brand / Header */}
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -257,6 +263,7 @@ export default function ChatPage() {
                     onClick={() => {
                       setActiveChannelId(ch.id);
                       setActiveRecipientId(null);
+                      setMobileTab("chat");
                     }}
                     className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
                       isActive
@@ -286,6 +293,7 @@ export default function ChatPage() {
                     onClick={() => {
                       setActiveRecipientId(contact.id);
                       setActiveChannelId(null);
+                      setMobileTab("chat");
                     }}
                     className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
                       isActive
@@ -309,16 +317,28 @@ export default function ChatPage() {
       </div>
 
       {/* Right Chat Main Pane */}
-      <div className="flex-1 flex flex-col min-w-0 bg-slate-50/40">
+      <div
+        className={`flex-1 flex flex-col min-w-0 bg-slate-50/40 ${
+          mobileTab === "channels" ? "hidden md:flex" : "flex"
+        }`}
+      >
         {/* Chat Header */}
-        <div className="h-14 px-6 bg-white border-b border-slate-200/80 flex items-center justify-between shrink-0 shadow-2xs">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="h-14 px-3 sm:px-6 bg-white border-b border-slate-200/80 flex items-center justify-between gap-2 shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <button
+              onClick={() => setMobileTab("channels")}
+              className="md:hidden p-1.5 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition shrink-0"
+              title="Back to channels"
+              aria-label="Back to channels"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
             {activeChannel ? (
               <>
-                <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm">
+                <div className="w-7 h-7 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm shrink-0">
                   #
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3 className="font-bold text-sm text-slate-900 truncate">
                     #{activeChannel.name}
                   </h3>
@@ -329,10 +349,10 @@ export default function ChatPage() {
               </>
             ) : activeContact ? (
               <>
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand-600 to-ink-500 text-white flex items-center justify-center font-bold text-xs">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand-600 to-ink-500 text-white flex items-center justify-center font-bold text-xs shrink-0">
                   {activeContact.name[0]}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h3 className="font-bold text-sm text-slate-900 truncate">
                     {activeContact.name}
                   </h3>
@@ -342,12 +362,12 @@ export default function ChatPage() {
                 </div>
               </>
             ) : (
-              <h3 className="font-bold text-sm text-slate-700">Select a channel or message</h3>
+              <h3 className="font-bold text-sm text-slate-700 truncate">Select a channel or message</h3>
             )}
           </div>
 
           {/* Search within this conversation */}
-          <div className="relative w-48 sm:w-64">
+          <div className="relative w-32 sm:w-64 shrink-0">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -555,7 +575,7 @@ export default function ChatPage() {
       {/* Create Channel Modal */}
       {isCreatingChannel && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-base text-slate-900">Create Channel</h3>
               <button

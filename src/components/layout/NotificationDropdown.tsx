@@ -70,16 +70,22 @@ export default function NotificationDropdown({
   };
 
   return (
-    <div className="absolute right-0 mt-2 w-80 sm:w-[26rem] bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-3 z-50 animate-in fade-in zoom-in-95 duration-100">
-      <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100">
-        <h3 className="font-semibold text-[15px] text-slate-900">Notifications</h3>
-        <button
-          onClick={markAllAsRead}
-          className="text-[13px] text-brand-600 hover:text-brand-800 font-semibold transition"
-        >
-          Mark all as read
-        </button>
-      </div>
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-slate-950/20 sm:bg-transparent"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="fixed inset-x-3 top-[68px] sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-[26rem] max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+        <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100">
+          <h3 className="font-semibold text-[15px] text-slate-900">Notifications</h3>
+          <button
+            onClick={markAllAsRead}
+            className="text-[13px] text-brand-600 hover:text-brand-800 font-semibold transition"
+          >
+            Mark all as read
+          </button>
+        </div>
 
       <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
         {loading ? (
@@ -128,6 +134,7 @@ export default function NotificationDropdown({
           ))
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

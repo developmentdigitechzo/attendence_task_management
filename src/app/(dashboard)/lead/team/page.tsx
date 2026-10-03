@@ -173,9 +173,9 @@ export default function LeadTeamWorkloadPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-slate-500 font-medium">Filter Capacity:</span>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {["ALL", "AVAILABLE", "BALANCED", "OVERLOADED"].map((cap) => (
               <button
                 key={cap}

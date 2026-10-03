@@ -164,7 +164,8 @@ export default function LeadAttendancePage() {
       {/* TAB 1: LIVE ATTENDANCE ROSTER */}
       {activeTab === "LIVE" && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-          <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <th className="py-3 px-4">Employee</th>
@@ -269,6 +270,7 @@ export default function LeadAttendancePage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -292,7 +294,8 @@ export default function LeadAttendancePage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-            <table className="w-full text-left border-collapse text-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4">Employee</th>
@@ -378,6 +381,7 @@ export default function LeadAttendancePage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

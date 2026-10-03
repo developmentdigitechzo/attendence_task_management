@@ -294,7 +294,7 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
       {/* TAB 2: NIFTY MILESTONES & ROADMAPS */}
       {activeTab === "MILESTONES" && (
         <div className="space-y-4">
-          <div className="p-4 bg-gradient-to-r from-brand-50 to-amber-50 rounded-2xl border border-brand-100 flex items-center justify-between">
+          <div className="p-4 bg-gradient-to-r from-brand-50 to-amber-50 rounded-2xl border border-brand-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-md shadow-brand-600/20">
                 <Flag className="w-5 h-5" />
@@ -427,7 +427,7 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
       {/* Create Project Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h3 className="font-bold text-base text-slate-900">Create New Project</h3>
               <button
@@ -528,7 +528,7 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
       {/* Add Milestone Modal */}
       {isMilestoneModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Flag className="w-5 h-5 text-amber-500" />

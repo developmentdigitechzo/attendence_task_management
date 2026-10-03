@@ -154,16 +154,19 @@ export default function CalendarView() {
           </div>
         </div>
 
-        {/* Days of Week Header */}
-        <div className="grid grid-cols-7 gap-1 mt-4 text-center text-xs font-semibold text-slate-400 uppercase py-2">
-          <div>Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
-        </div>
+        {/* Responsive Horizontal Scroll Wrapper for small screens */}
+        <div className="overflow-x-auto pb-2 -mx-1 px-1">
+          <div className="min-w-[640px]">
+            {/* Days of Week Header */}
+            <div className="grid grid-cols-7 gap-1 mt-4 text-center text-xs font-semibold text-slate-400 uppercase py-2">
+              <div>Sun</div>
+              <div>Mon</div>
+              <div>Tue</div>
+              <div>Wed</div>
+              <div>Thu</div>
+              <div>Fri</div>
+              <div>Sat</div>
+            </div>
 
         {/* Grid of Calendar Days */}
         <div className="grid grid-cols-7 gap-1.5">
@@ -242,6 +245,8 @@ export default function CalendarView() {
               </div>
             );
           })}
+          </div>
+          </div>
         </div>
       </div>
     </div>
