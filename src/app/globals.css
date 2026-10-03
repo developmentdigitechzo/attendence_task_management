@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Digitechzo palette: logo green + logo black */
+@layer base {
+  :root {
+    --background: 90 27% 96%;
+    --foreground: 90 12% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 90 12% 8%;
+
+    --primary: 97 70% 31%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 90 22% 94%;
+    --secondary-foreground: 90 12% 8%;
+
+    --muted: 90 22% 94%;
+    --muted-foreground: 95 8% 38%;
+
+    --accent: 98 50% 92%;
+    --accent-foreground: 97 70% 22%;
+
+    --border: 92 18% 88%;
+    --input: 92 18% 88%;
+    --ring: 98 64% 43%;
+
+    --radius: 0.75rem;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: #c7e6a6;
+    color: #0f2409;
+  }
+
+  :focus-visible {
+    outline: 2px solid #5cb528;
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled),
+  a {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  button:not(:disabled):active {
+    transform: translateY(0.5px);
+  }
+}
+
+body {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars for chat and tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c3c9ba;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7cc545;
+}
+
+/* ------------------------------------------------------------------
+   Site-wide hover effects (visual only; pointer devices only)
+   ------------------------------------------------------------------ */
+@media (hover: hover) and (pointer: fine) {
+  /* Stat / list cards: lift, brand-green edge, soft shadow */
+  .card-hover {
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: #a3d672;
+    box-shadow: 0 10px 24px -12px rgba(46, 108, 20, 0.35), 0 2px 6px rgba(21, 23, 19, 0.05);
+  }
+
+  /* Large panels / tables: no movement, just a brand edge and shadow */
+  .panel-hover {
+    transition: box-shadow 180ms ease, border-color 180ms ease;
+  }
+  .panel-hover:hover {
+    border-color: #c7e6a6;
+    box-shadow: 0 8px 28px -14px rgba(46, 108, 20, 0.28);
+  }
+
+  /* Table rows: green tint plus a green marker on the first cell */
+  tbody tr > td {
+    transition: background-color 140ms ease, box-shadow 140ms ease;
+  }
+  tbody tr:hover > td {
+    background-color: rgba(92, 181, 40, 0.07);
+  }
+  tbody tr:hover > td:first-child {
+    box-shadow: inset 3px 0 0 0 #5cb528;
+  }
+
+  /* Solid green buttons: lift with a green glow */
+  button[class*="bg-brand-500"]:not(:disabled):hover,
+  button[class*="bg-brand-600"]:not(:disabled):hover,
+  a[class*="bg-brand-500"]:hover,
+  a[class*="bg-brand-600"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -8px rgba(58, 134, 24, 0.7);
+  }
+
+  /* Solid dark buttons: lift with a neutral shadow */
+  button[class*="bg-slate-900"]:not(:disabled):hover,
+  button[class*="bg-slate-800"]:not(:disabled):hover,
+  button[class*="bg-ink-"]:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -8px rgba(21, 23, 19, 0.6);
+  }
+
+  /* Outline / light buttons: brand border + text */
+  button[class*="border-slate-200"]:not(:disabled):hover,
+  a[class*="border-slate-200"]:hover {
+    border-color: #7cc545;
+  }
+
+  /* Text links and ghost buttons in brand colour */
+  a[class*="text-brand-"]:hover,
+  button[class*="text-brand-"]:not([class*="bg-"]):hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Inputs, selects, textareas */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(:focus):not(:disabled):hover,
+  select:not(:focus):not(:disabled):hover,
+  textarea:not(:focus):not(:disabled):hover {
+    border-color: #a3d672;
+  }
+  input[type="checkbox"]:not(:disabled):hover,
+  input[type="radio"]:not(:disabled):hover {
+    box-shadow: 0 0 0 4px rgba(92, 181, 40, 0.18);
+  }
+
+  /* Anything marked as clickable */
+  [class*="cursor-pointer"]:hover {
+    border-color: #a3d672;
+  }
+
+  /* Icons inside buttons/links nudge slightly */
+  button:not(:disabled):hover > svg,
+  a:hover > svg {
+    transform: scale(1.1);
+  }
+  button > svg,
+  a > svg {
+    transition: transform 150ms ease;
+  }
+
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Login backdrop: slow drift of the logo-style swoosh */
+@keyframes swoosh-in {
+  from {
+    stroke-dashoffset: 1200;
+    opacity: 0;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+.swoosh-draw {
+  stroke-dasharray: 1200;
+  animation: swoosh-in 1.6s ease-out 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
