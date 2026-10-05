@@ -76,6 +76,10 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
   const isManagerOrAdmin = userRole === "SUPER_ADMIN" || userRole === "MANAGER";
 
   const fetchAllData = async () => {
+    if (userRole === "EMPLOYEE") {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [projRes, mileRes, empRes] = await Promise.all([
@@ -371,6 +375,20 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
 
     return matchesProject && matchesStatus;
   });
+
+  if (userRole === "EMPLOYEE") {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-10 text-center max-w-md mx-auto my-12">
+        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 border border-amber-200">
+          <FolderGit2 className="w-6 h-6" />
+        </div>
+        <h2 className="text-base font-bold text-slate-900">Access Restricted</h2>
+        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+          Projects & Milestones are managed exclusively by Administrators and Team Leads.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12">

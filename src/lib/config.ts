@@ -5,8 +5,8 @@ export const DEFAULT_CONFIG = {
   appSubtitle:
     process.env.NEXT_PUBLIC_APP_SUBTITLE ||
     "Internal Employee Management & Productivity System",
-  workStartTime: "09:00",
-  workEndTime: "18:00",
+  workStartTime: "10:00",
+  workEndTime: "19:00",
   gracePeriodMinutes: 15,
   timezone: "Asia/Kolkata",
   workingDays: [1, 2, 3, 4, 5, 6], // Mon-Sat

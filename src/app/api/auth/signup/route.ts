@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         role: validRole,
         status: "ACTIVE",
         workLocation: "Office",
-        workingHours: "09:00 - 18:00",
+        workingHours: "10:00 AM - 07:00 PM",
       },
     });
 

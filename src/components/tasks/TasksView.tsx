@@ -59,16 +59,20 @@ export default function TasksView({
       if (priorityFilter !== "ALL") params.set("priority", priorityFilter);
       if (projectFilter !== "ALL") params.set("projectId", projectFilter);
 
-      const [tasksRes, projRes] = await Promise.all([
-        fetch(`/api/tasks?${params.toString()}`),
-        fetch("/api/projects"),
-      ]);
+      const promises: Promise<any>[] = [fetch(`/api/tasks?${params.toString()}`)];
+      if (isManagerOrAdmin) {
+        promises.push(fetch("/api/projects"));
+      }
+
+      const results = await Promise.all(promises);
+      const tasksRes = results[0];
+      const projRes = isManagerOrAdmin ? results[1] : null;
 
       if (tasksRes.ok) {
         const data = await tasksRes.json();
         setTasks(data.tasks || []);
       }
-      if (projRes.ok) {
+      if (projRes && projRes.ok) {
         const pData = await projRes.json();
         setProjects(pData.projects || []);
       }
@@ -291,18 +295,20 @@ export default function TasksView({
 
         {/* Filters & View Mode */}
         <div className="flex items-center gap-3">
-          <select
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-            className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none"
-          >
-            <option value="ALL">All Projects</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          {isManagerOrAdmin && (
+            <select
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+              className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none"
+            >
+              <option value="ALL">All Projects</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
 
           <select
             value={priorityFilter}

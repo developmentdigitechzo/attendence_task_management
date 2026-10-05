@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -51,6 +51,25 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
 
   const isSuperAdmin = user.role === "SUPER_ADMIN";
   const isTeamLead = user.role === "MANAGER";
+  const [chatMessageCount, setChatMessageCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchChatCount = async () => {
+      try {
+        const res = await fetch("/api/chat/count");
+        if (res.ok) {
+          const data = await res.json();
+          setChatMessageCount(data.totalMessages || 0);
+        }
+      } catch {
+        // silent fail
+      }
+    };
+
+    fetchChatCount();
+    const interval = setInterval(fetchChatCount, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   const adminNav = [
     { name: "Executive Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -83,7 +102,6 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
     { name: "Dashboard (My Day)", href: "/employee", icon: LayoutDashboard },
     { name: "My Attendance", href: "/employee/attendance", icon: Clock },
     { name: "My Tasks", href: "/employee/tasks", icon: CheckSquare },
-    { name: "Projects & Milestones", href: "/employee/projects", icon: FolderGit2 },
     { name: "Internal Chat", href: "/chat", icon: MessageSquare },
     { name: "Leave Requests", href: "/employee/leave", icon: CalendarDays },
     { name: "Calendar", href: "/employee/calendar", icon: Calendar },
@@ -100,7 +118,12 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
+      const targetLogin = isSuperAdmin
+        ? "/admin/login"
+        : isTeamLead
+        ? "/lead/login"
+        : "/employee/login";
+      router.push(targetLogin);
       router.refresh();
     } catch (e) {
       console.error(e);
@@ -212,6 +235,11 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
                 <span className="truncate">{item.name}</span>
+                {item.href === "/chat" && chatMessageCount > 0 && (
+                  <span className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-500 text-slate-950 shadow-xs shrink-0">
+                    {chatMessageCount > 99 ? "99+" : chatMessageCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -220,13 +248,19 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
         {/* Bottom Profile Footer */}
         <div className="p-4 border-t border-white/10 bg-black/30">
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-slate-950 font-bold flex items-center justify-center text-xs shrink-0 ring-2 ring-white/20">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-white truncate">{user.name}</p>
-              <p className="text-[11px] text-brand-300 truncate">{roleLabel}</p>
-            </div>
+            <Link
+              href="/employee/profile"
+              className="flex items-center gap-3 flex-1 min-w-0 group"
+              title="View & Edit My Profile"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-slate-950 font-bold flex items-center justify-center text-xs shrink-0 ring-2 ring-white/20 group-hover:ring-brand-400 transition">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-white truncate group-hover:text-brand-300 transition">{user.name}</p>
+                <p className="text-[11px] text-brand-300 truncate">{roleLabel}</p>
+              </div>
+            </Link>
             <button
               onClick={handleLogout}
               title="Sign Out"

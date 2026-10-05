@@ -93,14 +93,66 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // If Direct Message, send notification to recipient
+    // 1. If Channel Message, notify all other channel members via push & in-app notifications
+    if (channelId) {
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+        select: { id: true, name: true },
+      });
+
+      const members = await prisma.channelMember.findMany({
+        where: {
+          channelId,
+          userId: { not: user.id },
+        },
+        select: { userId: true },
+      });
+
+      let recipientUserIds = members.map((m) => m.userId);
+
+      // If channel has no specific member list (public channel), notify all other active team members
+      if (recipientUserIds.length === 0) {
+        const allUsers = await prisma.user.findMany({
+          where: {
+            id: { not: user.id },
+            status: "ACTIVE",
+          },
+          select: { id: true },
+        });
+        recipientUserIds = allUsers.map((u) => u.id);
+      }
+
+      const preview = content.length > 75 ? content.slice(0, 75) + "..." : content;
+      const channelName = channel?.name || "chat";
+
+      await Promise.all(
+        recipientUserIds.map(async (uid) => {
+          try {
+            await createNotification({
+              data: {
+                userId: uid,
+                title: `#${channelName} • ${user.name}`,
+                message: preview,
+                type: "CHAT_MESSAGE",
+                linkUrl: `/chat?channelId=${channelId}`,
+              },
+            });
+          } catch (e) {
+            console.error("Push notify member error:", e);
+          }
+        })
+      );
+    }
+
+    // 2. If Direct Message, send push and notification to recipient
     if (recipientId) {
+      const preview = content.length > 75 ? content.slice(0, 75) + "..." : content;
       await createNotification({
         data: {
           userId: recipientId,
-          title: `New message from ${user.name}`,
-          message: content.length > 60 ? content.slice(0, 60) + "..." : content,
-          type: "MENTION",
+          title: `Message from ${user.name}`,
+          message: preview,
+          type: "CHAT_MESSAGE",
           linkUrl: `/chat?recipientId=${user.id}`,
         },
       });

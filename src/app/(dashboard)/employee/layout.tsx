@@ -8,7 +8,7 @@ export default async function EmployeeLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login");
+    redirect("/employee/login");
   }
 
   return <>{children}</>;

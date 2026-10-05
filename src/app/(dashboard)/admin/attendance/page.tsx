@@ -15,7 +15,7 @@ import {
   X,
   Download,
 } from "lucide-react";
-import { formatTimeIST, formatMinutes, getTodayDateString } from "@/lib/utils";
+import { formatTimeIST, formatMinutes, getTodayDateString, formatTime12h } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function AdminAttendancePage() {
@@ -412,7 +412,7 @@ export default function AdminAttendancePage() {
                     </td>
                     <td className="py-3 font-mono text-slate-700">{corr.requestedDate}</td>
                     <td className="py-3 font-mono text-slate-600">
-                      In: {corr.requestedCheckIn || "--"} | Out: {corr.requestedCheckOut || "--"}
+                      In: {formatTime12h(corr.requestedCheckIn)} | Out: {formatTime12h(corr.requestedCheckOut)}
                     </td>
                     <td className="py-3 text-slate-600 max-w-xs truncate" title={corr.reason}>
                       {corr.reason}

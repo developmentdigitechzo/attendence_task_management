@@ -98,8 +98,11 @@ export default function ChatPage() {
     setLoadingMessages(true);
     fetchMessages().finally(() => setLoadingMessages(false));
 
-    // Poll for new messages every 4 seconds
-    const timer = setInterval(fetchMessages, 4000);
+    // Poll for new messages and message counts every 4 seconds
+    const timer = setInterval(() => {
+      fetchMessages();
+      fetchChannels();
+    }, 4000);
     return () => clearInterval(timer);
   }, [activeChannelId, activeRecipientId, searchQuery]);
 
@@ -130,6 +133,7 @@ export default function ChatPage() {
 
       if (res.ok) {
         fetchMessages();
+        fetchChannels();
       }
     } catch (e) {
       console.error(e);
@@ -264,6 +268,7 @@ export default function ChatPage() {
             <div className="space-y-0.5">
               {channels.map((ch) => {
                 const isActive = activeChannelId === ch.id;
+                const count = ch.messageCount ?? ch._count?.messages ?? 0;
                 return (
                   <button
                     key={ch.id}
@@ -279,7 +284,19 @@ export default function ChatPage() {
                     }`}
                   >
                     <Hash className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                    <span className="truncate">{ch.name}</span>
+                    <span className="truncate flex-1 text-left">{ch.name}</span>
+                    {count > 0 && (
+                      <span
+                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full shrink-0 font-semibold ${
+                          isActive
+                            ? "bg-white/25 text-white"
+                            : "bg-slate-800 text-slate-300 border border-slate-700/60"
+                        }`}
+                        title={`${count} messages`}
+                      >
+                        {count > 999 ? "999+" : count}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -294,6 +311,7 @@ export default function ChatPage() {
             <div className="space-y-0.5">
               {directContacts.map((contact) => {
                 const isActive = activeRecipientId === contact.id;
+                const count = contact.messageCount ?? 0;
                 return (
                   <button
                     key={contact.id}
@@ -314,7 +332,19 @@ export default function ChatPage() {
                       </div>
                       <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-900"></span>
                     </div>
-                    <span className="truncate">{contact.name}</span>
+                    <span className="truncate flex-1 text-left">{contact.name}</span>
+                    {count > 0 && (
+                      <span
+                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full shrink-0 font-semibold ${
+                          isActive
+                            ? "bg-white/25 text-white"
+                            : "bg-slate-800 text-slate-300 border border-slate-700/60"
+                        }`}
+                        title={`${count} messages`}
+                      >
+                        {count > 999 ? "999+" : count}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -346,9 +376,14 @@ export default function ChatPage() {
                   #
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-sm text-slate-900 truncate">
-                    #{activeChannel.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 truncate">
+                      #{activeChannel.name}
+                    </h3>
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                      {messages.length} {messages.length === 1 ? "message" : "messages"}
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-400 truncate">
                     {activeChannel.topic || "Team workspace discussion"}
                   </p>
@@ -360,9 +395,14 @@ export default function ChatPage() {
                   {activeContact.name[0]}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-sm text-slate-900 truncate">
-                    {activeContact.name}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 truncate">
+                      {activeContact.name}
+                    </h3>
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                      {messages.length} {messages.length === 1 ? "message" : "messages"}
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-400 truncate">
                     {activeContact.designation || "Team Member"} • Direct Message
                   </p>

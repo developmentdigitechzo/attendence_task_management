@@ -193,6 +193,121 @@ button:disabled {
   animation: swoosh-in 1.6s ease-out 0.15s both;
 }
 
+/* Animated floating balls / orbs for login background */
+@keyframes float-ball-1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(50px, -65px, 0) scale(1.1) rotate(45deg);
+  }
+  66% {
+    transform: translate3d(-40px, 45px, 0) scale(0.94) rotate(90deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes float-ball-2 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(-60px, 55px, 0) scale(1.14) rotate(-50deg);
+  }
+  66% {
+    transform: translate3d(45px, -45px, 0) scale(0.9) rotate(-100deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes float-ball-3 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(35px, 60px, 0) scale(1.18);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+}
+
+@keyframes float-ball-4 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-45px, -45px, 0) scale(0.88);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+}
+
+@keyframes float-ball-5 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(65px, -35px, 0) scale(1.16);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-ball-1 {
+  will-change: transform;
+  animation: float-ball-1 16s ease-in-out infinite;
+}
+
+.animate-ball-2 {
+  will-change: transform;
+  animation: float-ball-2 20s ease-in-out infinite;
+}
+
+.animate-ball-3 {
+  will-change: transform;
+  animation: float-ball-3 14s ease-in-out infinite;
+}
+
+.animate-ball-4 {
+  will-change: transform;
+  animation: float-ball-4 18s ease-in-out infinite;
+}
+
+.animate-ball-5 {
+  will-change: transform;
+  animation: float-ball-5 22s ease-in-out infinite;
+}
+
+.sphere-gloss {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 45px rgba(0, 0, 0, 0.55),
+    inset -6px -6px 14px rgba(0, 0, 0, 0.45),
+    inset 6px 6px 14px rgba(255, 255, 255, 0.65);
+}
+
+.sphere-gloss::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 14%;
+  width: 42%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.25) 60%, transparent 100%);
+  transform: rotate(-35deg);
+  pointer-events: none;
+}
+
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -202,3 +317,4 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+

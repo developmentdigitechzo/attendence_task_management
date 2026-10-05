@@ -22,7 +22,7 @@ model User {
   managerId        String?
   joiningDate      DateTime  @default(now())
   workLocation     String?   @default("Office")
-  workingHours     String?   @default("09:00 - 18:00")
+  workingHours     String?   @default("10:00 AM - 07:00 PM")
   emergencyContact String?
   skills           String?   @db.Text
   bio              String?   @db.Text
@@ -104,8 +104,8 @@ model AttendanceCorrection {
   attendanceId      String?
   userId            String
   requestedDate     String      // YYYY-MM-DD
-  requestedCheckIn  String?     // e.g. "09:00"
-  requestedCheckOut String?     // e.g. "18:00"
+  requestedCheckIn  String?     // e.g. "10:00"
+  requestedCheckOut String?     // e.g. "19:00"
   reason            String      @db.Text
   status            String      @default("PENDING") // PENDING, APPROVED, REJECTED
   reviewedById      String?

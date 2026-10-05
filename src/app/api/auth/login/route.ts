@@ -6,7 +6,7 @@ import { ensureUserCheckedInToday } from "@/lib/attendance";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, portal } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -43,6 +43,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Invalid email address or password." },
         { status: 401 }
+      );
+    }
+
+    if (portal === "admin" && user.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        { error: "Access denied. This account does not have Administrator privileges. Please use the Team Lead (/lead/login) or Employee (/employee/login) portal." },
+        { status: 403 }
+      );
+    }
+
+    if (portal === "lead" && user.role === "EMPLOYEE") {
+      return NextResponse.json(
+        { error: "Access denied. This account does not have Team Lead / Manager privileges. Please use the Employee portal (/employee/login)." },
+        { status: 403 }
       );
     }
 

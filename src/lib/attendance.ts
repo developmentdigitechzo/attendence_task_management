@@ -2,7 +2,7 @@ import { getCompanySettings } from "./config";
 
 /**
  * Determines attendance status on check-in based on dynamic company settings
- * e.g., workStartTime = "09:00", gracePeriodMinutes = 15 => <= 09:15 is PRESENT, > 09:15 is LATE
+ * e.g., workStartTime = "10:00", gracePeriodMinutes = 15 => <= 10:15 is PRESENT, > 10:15 is LATE
  */
 export async function determineCheckInStatus(checkInDate: Date): Promise<"PRESENT" | "LATE"> {
   const settings = await getCompanySettings();

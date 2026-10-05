@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, UserPlus, AlertCircle, Save } from "lucide-react";
+import { formatWorkingHours } from "@/lib/utils";
 
 interface EmployeeModalProps {
   employee?: any | null; // if provided, edit mode
@@ -23,7 +24,7 @@ export default function EmployeeModal({
   const [role, setRole] = useState(employee?.role || "EMPLOYEE");
   const [managerId, setManagerId] = useState(employee?.managerId || "");
   const [workLocation, setWorkLocation] = useState(employee?.workLocation || "Headquarters");
-  const [workingHours, setWorkingHours] = useState(employee?.workingHours || "09:00 - 18:00");
+  const [workingHours, setWorkingHours] = useState(employee?.workingHours ? formatWorkingHours(employee.workingHours) : "10:00 AM - 07:00 PM");
   const [password, setPassword] = useState("password123");
   const [status, setStatus] = useState(employee?.status || "ACTIVE");
 
@@ -267,6 +268,19 @@ export default function EmployeeModal({
                 className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Working Hours
+            </label>
+            <input
+              type="text"
+              value={workingHours}
+              onChange={(e) => setWorkingHours(e.target.value)}
+              placeholder="10:00 AM - 07:00 PM"
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
+            />
           </div>
 
           {isEdit ? (

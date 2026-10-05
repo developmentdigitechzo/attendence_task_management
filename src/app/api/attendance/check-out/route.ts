@@ -42,13 +42,10 @@ export async function POST(req: NextRequest) {
     const now = new Date();
 
     // If an ongoing break exists, close it first
-    let totalBreakMinutes = attendance.breakDurationMinutes;
     const ongoingBreak = attendance.breaks.find((b) => b.endTime === null);
     if (ongoingBreak) {
-      const breakDuration = Math.max(
-        1,
-        Math.floor((now.getTime() - ongoingBreak.startTime.getTime()) / (1000 * 60))
-      );
+      const elapsedMs = now.getTime() - ongoingBreak.startTime.getTime();
+      const breakDuration = Math.max(1, Math.round(elapsedMs / (1000 * 60)));
       await prisma.break.update({
         where: { id: ongoingBreak.id },
         data: {
@@ -56,8 +53,13 @@ export async function POST(req: NextRequest) {
           durationMinutes: breakDuration,
         },
       });
-      totalBreakMinutes += breakDuration;
     }
+
+    // Recalculate total break duration from all breaks in DB
+    const allBreaks = await prisma.break.findMany({
+      where: { attendanceId: attendance.id },
+    });
+    const totalBreakMinutes = allBreaks.reduce((sum, b) => sum + (b.durationMinutes || 0), 0);
 
     // Calculate total net working minutes
     const workMinutes = calculateWorkingMinutes(

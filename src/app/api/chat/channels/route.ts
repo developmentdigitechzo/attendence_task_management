@@ -15,7 +15,12 @@ export async function GET() {
     orderBy: { name: "asc" },
   });
 
-  // Direct message contacts: all other active employees
+  const formattedChannels = channels.map((c) => ({
+    ...c,
+    messageCount: c._count?.messages || 0,
+  }));
+
+  // Direct message contacts: all other active employees with message count
   const directContacts = await prisma.user.findMany({
     where: {
       id: { not: user.id },
@@ -33,9 +38,31 @@ export async function GET() {
     orderBy: { name: "asc" },
   });
 
+  const directContactsWithCount = await Promise.all(
+    directContacts.map(async (c) => {
+      const count = await prisma.message.count({
+        where: {
+          OR: [
+            { senderId: user.id, recipientId: c.id },
+            { senderId: c.id, recipientId: user.id },
+          ],
+        },
+      });
+      return {
+        ...c,
+        messageCount: count,
+      };
+    })
+  );
+
+  const totalChannelMessages = formattedChannels.reduce((sum, ch) => sum + ch.messageCount, 0);
+  const totalDmMessages = directContactsWithCount.reduce((sum, c) => sum + c.messageCount, 0);
+  const totalMessages = totalChannelMessages + totalDmMessages;
+
   return NextResponse.json({
-    channels,
-    directContacts,
+    channels: formattedChannels,
+    directContacts: directContactsWithCount,
+    totalMessages,
   });
 }
 

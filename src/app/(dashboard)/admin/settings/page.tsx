@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Settings, Save, CheckCircle2, AlertCircle, Building2, Clock, Globe } from "lucide-react";
+import { formatTime12h } from "@/lib/utils";
 
 export default function AdminSettingsPage() {
   const [companyName, setCompanyName] = useState("Digitechzo");
   const [subtitle, setSubtitle] = useState("Internal Employee Management & Productivity System");
-  const [workStartTime, setWorkStartTime] = useState("09:00");
-  const [workEndTime, setWorkEndTime] = useState("18:00");
+  const [workStartTime, setWorkStartTime] = useState("10:00");
+  const [workEndTime, setWorkEndTime] = useState("19:00");
   const [gracePeriodMinutes, setGracePeriodMinutes] = useState(15);
   const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [workingDays, setWorkingDays] = useState("1,2,3,4,5,6");
@@ -124,9 +125,14 @@ export default function AdminSettingsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Office Start Time
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Office Start Time
+                </label>
+                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                  {formatTime12h(workStartTime)}
+                </span>
+              </div>
               <input
                 type="time"
                 value={workStartTime}
@@ -136,9 +142,14 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Office End Time
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Office End Time
+                </label>
+                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                  {formatTime12h(workEndTime)}
+                </span>
+              </div>
               <input
                 type="time"
                 value={workEndTime}
@@ -160,7 +171,7 @@ export default function AdminSettingsPage() {
                 className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none font-mono"
               />
               <p className="text-[10px] text-slate-400 mt-1">
-                Arrival after {workStartTime} + {gracePeriodMinutes}m is flagged as Late.
+                Arrival after {formatTime12h(workStartTime)} + {gracePeriodMinutes}m is flagged as Late.
               </p>
             </div>
           </div>

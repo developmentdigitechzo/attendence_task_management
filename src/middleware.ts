@@ -32,15 +32,15 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("auth_token")?.value;
   const session = token ? await verifyToken(token) : null;
 
-  // 1. If accessing /login, allow access so user can sign in or switch accounts
-  if (pathname === "/login") {
-    return NextResponse.next();
-  }
-
-  // Helper to create redirect to login and clear any invalid token
+  // Helper to create redirect to role-specific login portal
   const redirectToLogin = (fromPath?: string) => {
-    const loginUrl = new URL("/login", req.url);
-    if (fromPath && fromPath !== "/") {
+    let target = "/login";
+    if (fromPath?.startsWith("/admin")) target = "/admin/login";
+    else if (fromPath?.startsWith("/lead")) target = "/lead/login";
+    else if (fromPath?.startsWith("/employee")) target = "/employee/login";
+
+    const loginUrl = new URL(target, req.url);
+    if (fromPath && fromPath !== "/" && !fromPath.endsWith("/login")) {
       loginUrl.searchParams.set("from", fromPath);
     }
     const res = NextResponse.redirect(loginUrl);
@@ -50,7 +50,36 @@ export async function middleware(req: NextRequest) {
     return res;
   };
 
-  // 2. If accessing root /
+  // 1. Dedicated & General Login Pages Handling
+  if (pathname === "/admin/login") {
+    if (session?.role === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname === "/lead/login") {
+    if (session && (session.role === "MANAGER" || session.role === "SUPER_ADMIN")) {
+      return NextResponse.redirect(new URL("/lead", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname === "/employee/login") {
+    if (session) {
+      return NextResponse.redirect(new URL("/employee", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname === "/login") {
+    if (session) {
+      return NextResponse.redirect(new URL(getPortalForRole(session.role), req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 2. Root /
   if (pathname === "/") {
     if (session) {
       return NextResponse.redirect(new URL(getPortalForRole(session.role), req.url));
@@ -64,7 +93,6 @@ export async function middleware(req: NextRequest) {
       return redirectToLogin(pathname);
     }
     if (session.role !== "SUPER_ADMIN") {
-      // Unauthorized role: redirect to their appropriate role portal
       return NextResponse.redirect(new URL(getPortalForRole(session.role), req.url));
     }
     return NextResponse.next();
@@ -75,7 +103,6 @@ export async function middleware(req: NextRequest) {
     if (!session) {
       return redirectToLogin(pathname);
     }
-    // Only SUPER_ADMIN and MANAGER are allowed
     if (session.role === "EMPLOYEE") {
       return NextResponse.redirect(new URL("/employee", req.url));
     }
@@ -86,6 +113,10 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith("/employee")) {
     if (!session) {
       return redirectToLogin(pathname);
+    }
+    // Projects and milestones are removed for employee role
+    if (pathname.startsWith("/employee/projects")) {
+      return NextResponse.redirect(new URL("/employee", req.url));
     }
     return NextResponse.next();
   }

@@ -9,6 +9,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (user.role === "EMPLOYEE") {
+    return NextResponse.json({ error: "Forbidden: Projects are not accessible to employee role." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get("id");
 

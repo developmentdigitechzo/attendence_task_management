@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Send, AlertCircle } from "lucide-react";
-import { getTodayDateString } from "@/lib/utils";
+import { getTodayDateString, formatTime12h } from "@/lib/utils";
 
 export default function CorrectionModal({
   onClose,
@@ -12,8 +12,8 @@ export default function CorrectionModal({
   onSuccess: () => void;
 }) {
   const [requestedDate, setRequestedDate] = useState(getTodayDateString());
-  const [requestedCheckIn, setRequestedCheckIn] = useState("09:00");
-  const [requestedCheckOut, setRequestedCheckOut] = useState("18:00");
+  const [requestedCheckIn, setRequestedCheckIn] = useState("10:00");
+  const [requestedCheckOut, setRequestedCheckOut] = useState("19:00");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,9 +92,14 @@ export default function CorrectionModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Requested Check-In
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Check-In
+                </label>
+                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                  {formatTime12h(requestedCheckIn)}
+                </span>
+              </div>
               <input
                 type="time"
                 value={requestedCheckIn}
@@ -103,9 +108,14 @@ export default function CorrectionModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Requested Check-Out
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Check-Out
+                </label>
+                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                  {formatTime12h(requestedCheckOut)}
+                </span>
+              </div>
               <input
                 type="time"
                 value={requestedCheckOut}

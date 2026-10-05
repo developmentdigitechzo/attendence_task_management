@@ -1,7 +1,6 @@
-import { getCurrentUser } from "@/lib/auth";
-import ProjectsView from "@/components/projects/ProjectsView";
+import { redirect } from "next/navigation";
 
-export default async function EmployeeProjectsPage() {
-  const user = await getCurrentUser();
-  return <ProjectsView userRole={user?.role || "EMPLOYEE"} />;
+export default function EmployeeProjectsPage() {
+  redirect("/employee");
 }
+

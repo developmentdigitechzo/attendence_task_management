@@ -30,6 +30,7 @@ export default function AttendanceWidget({
   const [activeBreak, setActiveBreak] = useState<any>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [breakSeconds, setBreakSeconds] = useState(0);
+  const [totalBreakSeconds, setTotalBreakSeconds] = useState(0);
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -41,20 +42,45 @@ export default function AttendanceWidget({
         setAttendance(data.attendance);
         setActiveBreak(data.activeBreak);
 
-        // Calculate initial elapsed seconds from checkIn
+        // 1. Calculate total completed break seconds from all break records
+        let completedBreakSec = 0;
+        if (data.attendance?.breaks && Array.isArray(data.attendance.breaks)) {
+          for (const b of data.attendance.breaks) {
+            if (b.endTime && b.startTime) {
+              const diff = Math.floor(
+                (new Date(b.endTime).getTime() - new Date(b.startTime).getTime()) / 1000
+              );
+              completedBreakSec += Math.max(0, diff);
+            } else if (b.durationMinutes && b.endTime) {
+              completedBreakSec += b.durationMinutes * 60;
+            }
+          }
+        } else if (data.attendance?.breakDurationMinutes) {
+          completedBreakSec = data.attendance.breakDurationMinutes * 60;
+        }
+
+        // 2. Calculate current active break seconds if ongoing
+        let currentActiveBreakSec = 0;
+        if (data.activeBreak) {
+          const breakStartMs = new Date(data.activeBreak.startTime).getTime();
+          currentActiveBreakSec = Math.max(0, Math.floor((Date.now() - breakStartMs) / 1000));
+          setBreakSeconds(currentActiveBreakSec);
+        } else {
+          setBreakSeconds(0);
+        }
+
+        const totalBreakSec = completedBreakSec + currentActiveBreakSec;
+        setTotalBreakSeconds(totalBreakSec);
+
+        // 3. Calculate initial net working seconds from checkIn (total elapsed minus total break)
         if (data.attendance?.checkIn && !data.attendance?.checkOut) {
           const startMs = new Date(data.attendance.checkIn).getTime();
           const nowMs = Date.now();
-          const breakMin = data.attendance.breakDurationMinutes || 0;
-          const totalWorkingMs = nowMs - startMs - breakMin * 60 * 1000;
-          setElapsedSeconds(Math.max(0, Math.floor(totalWorkingMs / 1000)));
+          const totalElapsedSec = Math.max(0, Math.floor((nowMs - startMs) / 1000));
+          const netWorkingSec = Math.max(0, totalElapsedSec - totalBreakSec);
+          setElapsedSeconds(netWorkingSec);
         } else if (data.attendance?.checkOut) {
           setElapsedSeconds((data.attendance.workDurationMinutes || 0) * 60);
-        }
-
-        if (data.activeBreak) {
-          const breakStartMs = new Date(data.activeBreak.startTime).getTime();
-          setBreakSeconds(Math.max(0, Math.floor((Date.now() - breakStartMs) / 1000)));
         }
       }
     } catch (e) {
@@ -75,6 +101,7 @@ export default function AttendanceWidget({
     const interval = setInterval(() => {
       if (activeBreak) {
         setBreakSeconds((prev) => prev + 1);
+        setTotalBreakSeconds((prev) => prev + 1);
       } else {
         setElapsedSeconds((prev) => prev + 1);
       }
@@ -174,7 +201,7 @@ export default function AttendanceWidget({
             Good Morning, {userName}! 👋
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Office hours: 09:00 AM – 06:00 PM (15m grace period)
+            Office hours: 10:00 AM – 07:00 PM • Attendance & Break Tracking
           </p>
         </div>
 
@@ -193,7 +220,7 @@ export default function AttendanceWidget({
             </span>
           )}
           {isCheckedIn && !isCheckedOut && isOnBreak && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
               <Coffee className="w-3.5 h-3.5 text-amber-500" />
               On Break
             </span>
@@ -207,8 +234,6 @@ export default function AttendanceWidget({
         </div>
       </div>
 
-      {/* Feedback Messages */}
-
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
         <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
@@ -216,12 +241,16 @@ export default function AttendanceWidget({
           <p className="text-base font-semibold text-slate-800 mt-1">
             {formatTimeIST(attendance?.checkIn)}
           </p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Punch in timestamp</p>
         </div>
 
         <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
           <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Check Out Time</p>
           <p className="text-base font-semibold text-slate-800 mt-1">
             {formatTimeIST(attendance?.checkOut)}
+          </p>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            {isCheckedOut ? "Work day finished" : "In progress"}
           </p>
         </div>
 
@@ -230,18 +259,25 @@ export default function AttendanceWidget({
           <p className="text-base font-mono font-bold text-brand-900 mt-1">
             {formatTimer(elapsedSeconds)}
           </p>
+          <p className="text-[10px] text-brand-600 mt-0.5 font-medium">
+            {isOnBreak ? "⏸️ Paused during break" : "▶️ Active work counting"}
+          </p>
         </div>
 
         <div className="bg-amber-50/50 p-3.5 rounded-xl border border-amber-100/60">
-          <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wider">Total Break</p>
+          <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wider">Total Break Time</p>
           <p className="text-base font-mono font-bold text-amber-900 mt-1">
-            {formatMinutes(attendance?.breakDurationMinutes || 0)}
-            {isOnBreak && ` (+${formatMinutes(Math.floor(breakSeconds / 60))})`}
+            {formatTimer(totalBreakSeconds)}
+          </p>
+          <p className="text-[10px] text-amber-700 mt-0.5 font-medium">
+            {isOnBreak
+              ? "⚡ Break counting live..."
+              : `${attendance?.breaks?.length || 0} break${attendance?.breaks?.length === 1 ? "" : "s"} accumulated`}
           </p>
         </div>
       </div>
 
-      {/* Primary Action Buttons (Touch friendly and responsive) */}
+      {/* Primary Action Buttons */}
       <div className="flex flex-wrap items-center gap-3 pt-2">
         {!isCheckedIn ? (
           <button
@@ -298,6 +334,56 @@ export default function AttendanceWidget({
           <span>Attendance Correction</span>
         </button>
       </div>
+
+      {/* Today's Breaks Breakdown (Every break taken today is calculated & listed) */}
+      {attendance?.breaks && attendance.breaks.length > 0 && (
+        <div className="mt-5 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Today&apos;s Breaks ({attendance.breaks.length}) • All Accumulated
+            </p>
+            <span className="text-[11px] font-semibold text-amber-700 font-mono">
+              Total: {formatTimer(totalBreakSeconds)}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {attendance.breaks.map((b: any, idx: number) => {
+              const isOngoing = b.endTime === null;
+              const breakSecs = isOngoing
+                ? breakSeconds
+                : b.endTime && b.startTime
+                ? Math.max(0, Math.floor((new Date(b.endTime).getTime() - new Date(b.startTime).getTime()) / 1000))
+                : (b.durationMinutes || 0) * 60;
+
+              return (
+                <div
+                  key={b.id || idx}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border flex items-center gap-1.5 transition ${
+                    isOngoing
+                      ? "bg-amber-50 text-amber-900 border-amber-300 font-semibold ring-1 ring-amber-200"
+                      : "bg-slate-50 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  <Coffee className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span className="font-semibold">Break {idx + 1}:</span>
+                  <span className="font-mono text-[11px] text-slate-600">
+                    {formatTimeIST(b.startTime)} – {isOngoing ? "Ongoing" : formatTimeIST(b.endTime)}
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                      isOngoing
+                        ? "bg-amber-200 text-amber-900 animate-pulse"
+                        : "bg-slate-200/80 text-slate-700"
+                    }`}
+                  >
+                    {formatTimer(breakSecs)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {isCorrectionModalOpen && (
         <CorrectionModal

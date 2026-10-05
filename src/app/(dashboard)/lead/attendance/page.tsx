@@ -14,7 +14,7 @@ import {
   Search,
   Filter,
 } from "lucide-react";
-import { formatTimeIST, formatMinutes, getTodayDateString, formatDateDisplay } from "@/lib/utils";
+import { formatTimeIST, formatMinutes, getTodayDateString, formatDateDisplay, formatTime12h } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
 
 export default function LeadAttendancePage() {
@@ -338,11 +338,11 @@ export default function LeadAttendancePage() {
                       </td>
 
                       <td className="py-3 px-4 font-mono text-slate-600">
-                        {corr.requestedCheckIn ? formatTimeIST(corr.requestedCheckIn) : "--"}
+                        {corr.requestedCheckIn ? formatTime12h(corr.requestedCheckIn) : "--"}
                       </td>
 
                       <td className="py-3 px-4 font-mono text-slate-600">
-                        {corr.requestedCheckOut ? formatTimeIST(corr.requestedCheckOut) : "--"}
+                        {corr.requestedCheckOut ? formatTime12h(corr.requestedCheckOut) : "--"}
                       </td>
 
                       <td className="py-3 px-4 text-slate-600 max-w-xs truncate">

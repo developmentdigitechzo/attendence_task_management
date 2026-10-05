@@ -73,10 +73,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const duration = Math.max(
-        1,
-        Math.floor((now.getTime() - activeBreak.startTime.getTime()) / (1000 * 60))
-      );
+      const elapsedMs = now.getTime() - activeBreak.startTime.getTime();
+      const elapsedSec = Math.floor(elapsedMs / 1000);
+      const duration = Math.max(1, Math.round(elapsedSec / 60));
 
       const endedBreak = await prisma.break.update({
         where: { id: activeBreak.id },
@@ -86,17 +85,26 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Sum all completed breaks to ensure 100% calculation accuracy
+      const allBreaks = await prisma.break.findMany({
+        where: { attendanceId: attendance.id },
+      });
+      const totalBreakMinutes = allBreaks.reduce(
+        (acc, b) => acc + (b.id === endedBreak.id ? duration : (b.durationMinutes || 0)),
+        0
+      );
+
       const updatedAttendance = await prisma.attendance.update({
         where: { id: attendance.id },
         data: {
-          breakDurationMinutes: attendance.breakDurationMinutes + duration,
+          breakDurationMinutes: totalBreakMinutes,
         },
         include: { breaks: true },
       });
 
       return NextResponse.json({
         success: true,
-        message: `Break ended (${duration} minutes).`,
+        message: `Break ended (${duration} min). All breaks recalculated.`,
         break: endedBreak,
         attendance: updatedAttendance,
       });

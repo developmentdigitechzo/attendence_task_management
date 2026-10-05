@@ -35,8 +35,8 @@ async function main() {
   const settings = [
     { key: "companyName", value: "Digitechzo", description: "Company display name" },
     { key: "subtitle", value: "Internal Employee Management & Productivity System", description: "Sub-branding title" },
-    { key: "workStartTime", value: "09:00", description: "Official office start time" },
-    { key: "workEndTime", value: "18:00", description: "Official office end time" },
+    { key: "workStartTime", value: "10:00", description: "Official office start time" },
+    { key: "workEndTime", value: "19:00", description: "Official office end time" },
     { key: "gracePeriodMinutes", value: "15", description: "Grace period in minutes before marked Late" },
     { key: "timezone", value: "Asia/Kolkata", description: "Company default timezone" },
     { key: "workingDays", value: "1,2,3,4,5,6", description: "Working days of the week (1=Mon ... 6=Sat)" },
@@ -80,7 +80,7 @@ async function main() {
       designation: "Managing Director",
       phone: "+91 98765 43210",
       workLocation: "Headquarters",
-      workingHours: "09:00 - 18:00",
+      workingHours: "10:00 AM - 07:00 PM",
       bio: "Managing Director leading digital transformation, operations and strategy at Digitechzo.",
       skills: "Leadership, Strategy, Operations, Architecture",
     },
@@ -99,7 +99,7 @@ async function main() {
       phone: "+91 98765 43211",
       managerId: admin.id,
       workLocation: "Headquarters",
-      workingHours: "09:00 - 18:00",
+      workingHours: "10:00 AM - 07:00 PM",
       bio: "Technical lead managing engineering workflows, sprint delivery, and technical mentorship.",
       skills: "Full-Stack Development, System Architecture, Agile, Mentorship",
     },
@@ -118,7 +118,7 @@ async function main() {
       phone: "+91 98765 43212",
       managerId: lead.id,
       workLocation: "Office (Desk 4)",
-      workingHours: "09:00 - 18:00",
+      workingHours: "10:00 AM - 07:00 PM",
       bio: "Full-stack developer building modern Next.js interfaces, APIs, and microservices.",
       skills: "React, Next.js, Node.js, TypeScript, MySQL, TailwindCSS",
     },
@@ -478,9 +478,9 @@ async function main() {
     data: {
       userId: employee.id,
       requestedDate: "2026-09-15",
-      requestedCheckIn: "09:00",
-      requestedCheckOut: "18:00",
-      reason: "Office internet outage occurred during evening checkout at 6:00 PM.",
+      requestedCheckIn: "10:00",
+      requestedCheckOut: "19:00",
+      reason: "Office internet outage occurred during evening checkout at 7:00 PM.",
       status: "PENDING",
     },
   });
@@ -563,7 +563,7 @@ async function main() {
   await prisma.announcement.create({
     data: {
       title: "Welcome to Digitechzo WorkOS 🚀",
-      content: "Starting today, all team members should mark their daily attendance directly through WorkOS. Remember that office timing is 09:00 AM with a 15-minute grace window.",
+      content: "Starting today, all team members should mark their daily attendance directly through WorkOS. Remember that office timing is 10:00 AM with a 15-minute grace window.",
       createdById: admin.id,
       priority: "IMPORTANT",
       audience: "EVERYONE",
@@ -601,7 +601,7 @@ async function main() {
       userName: admin.name,
       action: "SYSTEM_INITIALIZED",
       targetType: "SETTING",
-      details: "Configured office hours (09:00 - 18:00) with 15 minute grace period.",
+      details: "Configured office hours (10:00 AM - 07:00 PM) with 15 minute grace period.",
     },
   });
 

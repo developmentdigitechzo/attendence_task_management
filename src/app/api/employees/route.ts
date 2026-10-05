@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       role = "EMPLOYEE",
       managerId,
       workLocation = "Office",
-      workingHours = "09:00 - 18:00",
+      workingHours = "10:00 AM - 07:00 PM",
       password = "password123", // default temporary password
       skills,
       bio,

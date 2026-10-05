@@ -119,7 +119,7 @@ export default function EmployeeAttendancePage() {
           Digitechzo Attendance & Correction Policy
         </h3>
         <p className="text-xs text-slate-600 leading-relaxed">
-          Office timings are 09:00 AM to 06:00 PM with a standard 15-minute grace window. All check-ins before 09:15 AM are marked <strong>On Time</strong>. If you forgot to punch in or experienced network connectivity issues, submit an <strong>Attendance Correction Request</strong> with the reason, which will be audited and reviewed by your manager.
+          Office timings are 10:00 AM to 07:00 PM with a standard 15-minute grace window. All check-ins before 10:15 AM are marked <strong>On Time</strong>. If you forgot to punch in or experienced network connectivity issues, submit an <strong>Attendance Correction Request</strong> with the reason, which will be audited and reviewed by your manager.
         </p>
       </div>
 

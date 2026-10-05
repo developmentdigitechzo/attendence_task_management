@@ -185,8 +185,8 @@ export async function PATCH(req: NextRequest) {
         create: {
           userId: correction.userId,
           date: correction.requestedDate,
-          checkIn: checkInDate || new Date(`${correction.requestedDate}T09:00:00Z`),
-          checkOut: checkOutDate || new Date(`${correction.requestedDate}T18:00:00Z`),
+          checkIn: checkInDate || new Date(`${correction.requestedDate}T10:00:00Z`),
+          checkOut: checkOutDate || new Date(`${correction.requestedDate}T19:00:00Z`),
           status: "PRESENT",
           workDurationMinutes: durationMinutes,
           notes: `Corrected by ${user.name}: ${correction.reason}`,
