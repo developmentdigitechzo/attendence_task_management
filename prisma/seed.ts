@@ -4,9 +4,9 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting seed...");
+  console.log("🌱 Starting clean database seed (3 users only: Admin, Team Lead, Employee)...");
 
-  // Clean existing data
+  // 1. Clean ALL existing data in proper dependency order
   await prisma.auditLog.deleteMany();
   await prisma.messageReaction.deleteMany();
   await prisma.message.deleteMany();
@@ -25,12 +25,13 @@ async function main() {
   await prisma.leaveRequest.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.notification.deleteMany();
+  await prisma.pushSubscription.deleteMany();
   await prisma.user.deleteMany();
   await prisma.department.deleteMany();
   await prisma.holiday.deleteMany();
   await prisma.companySetting.deleteMany();
 
-  // 1. Company Settings
+  // 2. Company Settings
   const settings = [
     { key: "companyName", value: "Digitechzo", description: "Company display name" },
     { key: "subtitle", value: "Internal Employee Management & Productivity System", description: "Sub-branding title" },
@@ -45,7 +46,10 @@ async function main() {
     await prisma.companySetting.create({ data: s });
   }
 
-  // 2. Departments
+  // 3. Departments
+  const deptHR = await prisma.department.create({
+    data: { name: "HR & Operations", code: "HR", description: "Human resources, operations, and administration" },
+  });
   const deptDev = await prisma.department.create({
     data: { name: "Development", code: "DEV", description: "Software engineering and technology architecture" },
   });
@@ -53,19 +57,18 @@ async function main() {
     data: { name: "Design", code: "DSN", description: "UI/UX, visual branding and creative direction" },
   });
   const deptMarketing = await prisma.department.create({
-    data: { name: "Marketing", code: "MKT", description: "Digital marketing, social media and campaigns" },
+    data: { name: "Marketing", code: "MKT", description: "Digital marketing and business growth" },
   });
   const deptSales = await prisma.department.create({
-    data: { name: "Sales", code: "SLS", description: "Client acquisition and revenue growth" },
-  });
-  const deptHR = await prisma.department.create({
-    data: { name: "HR & Operations", code: "HR", description: "Human resources, payroll, and internal ops" },
+    data: { name: "Sales", code: "SLS", description: "Client acquisition and client management" },
   });
 
   // Default hashed password: "password123"
   const passwordHash = await bcrypt.hash("password123", 10);
 
-  // 3. Super Admin
+  // 4. Exactly 3 Users: Admin, Team Lead, Employee
+
+  // User 1: Administrator (Super Admin)
   const admin = await prisma.user.create({
     data: {
       employeeId: "DIG-001",
@@ -78,109 +81,57 @@ async function main() {
       phone: "+91 98765 43210",
       workLocation: "Headquarters",
       workingHours: "09:00 - 18:00",
-      bio: "Founder and director leading digital transformation at Digitechzo.",
+      bio: "Managing Director leading digital transformation, operations and strategy at Digitechzo.",
       skills: "Leadership, Strategy, Operations, Architecture",
     },
   });
 
-  // 4. Manager
-  const manager = await prisma.user.create({
+  // User 2: Team Lead (Manager)
+  const lead = await prisma.user.create({
     data: {
       employeeId: "DIG-002",
       name: "Vikram Sharma",
-      email: "manager@digitechzo.com",
+      email: "lead@digitechzo.com",
       passwordHash,
       role: "MANAGER",
       departmentId: deptDev.id,
-      designation: "Engineering & Delivery Lead",
+      designation: "Engineering Team Lead",
       phone: "+91 98765 43211",
       managerId: admin.id,
       workLocation: "Headquarters",
       workingHours: "09:00 - 18:00",
-      bio: "Technical lead managing client delivery and engineering workflows.",
-      skills: "Full-Stack Development, Project Management, Agile, Mentorship",
+      bio: "Technical lead managing engineering workflows, sprint delivery, and technical mentorship.",
+      skills: "Full-Stack Development, System Architecture, Agile, Mentorship",
     },
   });
 
-  // 5. Employees
-  const empJohn = await prisma.user.create({
+  // User 3: Employee
+  const employee = await prisma.user.create({
     data: {
       employeeId: "DIG-003",
       name: "John Fernandes",
-      email: "john@digitechzo.com",
+      email: "employee@digitechzo.com",
       passwordHash,
       role: "EMPLOYEE",
       departmentId: deptDev.id,
       designation: "Senior Full-Stack Developer",
       phone: "+91 98765 43212",
-      managerId: manager.id,
+      managerId: lead.id,
       workLocation: "Office (Desk 4)",
       workingHours: "09:00 - 18:00",
-      bio: "Full-stack developer focusing on Next.js, APIs, and scalable infrastructure.",
-      skills: "React, Next.js, Node.js, PostgreSQL, TypeScript",
+      bio: "Full-stack developer building modern Next.js interfaces, APIs, and microservices.",
+      skills: "React, Next.js, Node.js, TypeScript, MySQL, TailwindCSS",
     },
   });
 
-  const empSarah = await prisma.user.create({
-    data: {
-      employeeId: "DIG-004",
-      name: "Sarah Khan",
-      email: "sarah@digitechzo.com",
-      passwordHash,
-      role: "EMPLOYEE",
-      departmentId: deptDesign.id,
-      designation: "Lead UI/UX Designer",
-      phone: "+91 98765 43213",
-      managerId: manager.id,
-      workLocation: "Office (Desk 5)",
-      workingHours: "09:00 - 18:00",
-      bio: "Crafting beautiful SaaS user experiences, design systems, and client brands.",
-      skills: "Figma, UI/UX, Design Systems, Prototyping, Motion Design",
-    },
-  });
+  const allUsers = [admin, lead, employee];
 
-  const empPriya = await prisma.user.create({
-    data: {
-      employeeId: "DIG-005",
-      name: "Priya Patel",
-      email: "priya@digitechzo.com",
-      passwordHash,
-      role: "EMPLOYEE",
-      departmentId: deptMarketing.id,
-      designation: "Digital Marketing Specialist",
-      phone: "+91 98765 43214",
-      managerId: manager.id,
-      workLocation: "Office (Desk 8)",
-      workingHours: "09:00 - 18:00",
-      bio: "Performance marketing, SEO, social campaigns, and client brand visibility.",
-      skills: "Performance Ads, Meta Ads, SEO, Content Strategy, Analytics",
-    },
-  });
-
-  const empArun = await prisma.user.create({
-    data: {
-      employeeId: "DIG-006",
-      name: "Arun Verma",
-      email: "arun@digitechzo.com",
-      passwordHash,
-      role: "EMPLOYEE",
-      departmentId: deptSales.id,
-      designation: "Client Growth & Sales Strategist",
-      phone: "+91 98765 43215",
-      managerId: manager.id,
-      workLocation: "Office (Desk 9)",
-      workingHours: "09:00 - 18:00",
-      bio: "Managing business development, client proposals, and strategic partnerships.",
-      skills: "B2B Sales, CRM, Negotiation, Strategic Partnerships",
-    },
-  });
-
-  // 6. Projects
+  // 5. Projects
   const projWorkOS = await prisma.project.create({
     data: {
       name: "Digitechzo WorkOS",
       client: "Internal Digitechzo",
-      description: "Comprehensive internal employee management, attendance & task platform",
+      description: "Internal employee management, attendance & task platform",
       managerId: admin.id,
       status: "ACTIVE",
       startDate: new Date("2026-09-01"),
@@ -188,39 +139,37 @@ async function main() {
       members: {
         create: [
           { userId: admin.id, role: "OWNER" },
-          { userId: manager.id, role: "MANAGER" },
-          { userId: empJohn.id, role: "DEVELOPER" },
-          { userId: empSarah.id, role: "DESIGNER" },
+          { userId: lead.id, role: "MANAGER" },
+          { userId: employee.id, role: "DEVELOPER" },
         ],
       },
     },
   });
 
-  const projKulfi = await prisma.project.create({
+  const projClient = await prisma.project.create({
     data: {
-      name: "Mumbai Kulfi Branding",
-      client: "Mumbai Kulfi Delights",
-      description: "Rebranding campaign, digital video reels, and social marketing launch",
-      managerId: manager.id,
+      name: "Enterprise Cloud Portal",
+      client: "Global Logistics Group",
+      description: "Client portal for fleet tracking and cloud analytics dashboard",
+      managerId: lead.id,
       status: "ACTIVE",
       startDate: new Date("2026-09-05"),
       deadline: new Date("2026-09-25"),
       members: {
         create: [
-          { userId: manager.id, role: "MANAGER" },
-          { userId: empSarah.id, role: "DESIGNER" },
-          { userId: empPriya.id, role: "MARKETER" },
+          { userId: lead.id, role: "MANAGER" },
+          { userId: employee.id, role: "DEVELOPER" },
         ],
       },
     },
   });
 
-  // 6.1 NiftyPM-Style Milestones
+  // 6. Milestones
   const m1 = await (prisma as any).milestone.create({
     data: {
       projectId: projWorkOS.id,
-      name: "Phase 1: Design & Architecture",
-      description: "Establish neutral SaaS design system and auth foundation",
+      name: "Phase 1: Architecture & Design System",
+      description: "Establish SaaS design system, typography, tokens, and multi-role auth foundation",
       startDate: new Date("2026-09-01"),
       dueDate: new Date("2026-09-12"),
       status: "COMPLETED",
@@ -231,7 +180,7 @@ async function main() {
     data: {
       projectId: projWorkOS.id,
       name: "Phase 2: Attendance Engine & 3 Portals",
-      description: "Live Check In/Out, break tracking, and dedicated Lead/Employee portals",
+      description: "Live Check In/Out, break tracking, and dedicated Admin, Lead & Employee portals",
       startDate: new Date("2026-09-10"),
       dueDate: new Date("2026-09-20"),
       status: "IN_PROGRESS",
@@ -240,9 +189,9 @@ async function main() {
 
   const m3 = await (prisma as any).milestone.create({
     data: {
-      projectId: projKulfi.id,
-      name: "Milestone 1: Creative Production",
-      description: "Video reels editing, flavor photoshoots, and menu design",
+      projectId: projClient.id,
+      name: "Milestone 1: Backend API & Webhooks",
+      description: "REST endpoints, auth middleware, and webhook receivers",
       startDate: new Date("2026-09-05"),
       dueDate: new Date("2026-09-18"),
       status: "IN_PROGRESS",
@@ -251,25 +200,25 @@ async function main() {
 
   const m4 = await (prisma as any).milestone.create({
     data: {
-      projectId: projKulfi.id,
-      name: "Milestone 2: Ads Launch & Distribution",
-      description: "Meta ads campaign rollout and local influencer partnerships",
+      projectId: projClient.id,
+      name: "Milestone 2: Analytics & Final QA",
+      description: "Real-time metrics charts, security audits, and production release signoff",
       startDate: new Date("2026-09-18"),
       dueDate: new Date("2026-09-25"),
       status: "UPCOMING",
     },
   });
 
-  // 7. Tasks
+  // 7. Tasks (Only assigned to and created by the 3 users)
   const tasks = [
     {
       taskId: "TSK-101",
-      title: "Design System & Figma Components",
+      title: "Design System & Figma Component Tokens",
       description: "Establish neutral SaaS typography, badge variants, and table designs",
       projectId: projWorkOS.id,
       milestoneId: m1.id,
-      assignedToId: empSarah.id,
-      createdById: manager.id,
+      assignedToId: lead.id,
+      createdById: admin.id,
       priority: "HIGH",
       status: "COMPLETED",
       dueDate: new Date("2026-09-12"),
@@ -281,8 +230,8 @@ async function main() {
       description: "Connect Check In/Out with real-time timer and late threshold calculator",
       projectId: projWorkOS.id,
       milestoneId: m2.id,
-      assignedToId: empJohn.id,
-      createdById: manager.id,
+      assignedToId: employee.id,
+      createdById: lead.id,
       priority: "URGENT",
       status: "IN_PROGRESS",
       dueDate: new Date("2026-09-16"),
@@ -293,7 +242,7 @@ async function main() {
       description: "Build accurate calculation engine with CSV, Excel and PDF download",
       projectId: projWorkOS.id,
       milestoneId: m2.id,
-      assignedToId: empJohn.id,
+      assignedToId: employee.id,
       createdById: admin.id,
       priority: "HIGH",
       status: "TODO",
@@ -301,72 +250,37 @@ async function main() {
     },
     {
       taskId: "TSK-104",
-      title: "Edit Video Reel 1 - Kitchen Process",
-      description: "Cut and color grade 30-second Instagram reel with trending sound",
-      projectId: projKulfi.id,
+      title: "Cloud Portal Fleet API Endpoints",
+      description: "Develop authenticated REST APIs for vehicle tracking telemetry",
+      projectId: projClient.id,
       milestoneId: m3.id,
-      assignedToId: empSarah.id,
-      createdById: manager.id,
+      assignedToId: employee.id,
+      createdById: lead.id,
       priority: "HIGH",
       status: "IN_PROGRESS",
       dueDate: new Date("2026-09-17"),
     },
     {
       taskId: "TSK-105",
-      title: "Edit Video Reel 2 - Taste Test Reactions",
-      description: "Motion graphics text overlays and call to action for Mumbai outlets",
-      projectId: projKulfi.id,
-      milestoneId: m3.id,
-      assignedToId: empSarah.id,
-      createdById: manager.id,
+      title: "Database Query Optimization & Indexing",
+      description: "Audit slow queries on attendance date ranges and add composite indexes",
+      projectId: projWorkOS.id,
+      milestoneId: m2.id,
+      assignedToId: lead.id,
+      createdById: admin.id,
       priority: "MEDIUM",
       status: "TODO",
       dueDate: new Date("2026-09-19"),
     },
     {
       taskId: "TSK-106",
-      title: "Setup Meta Ads Campaign for Mumbai Kulfi",
-      description: "Target local foodies within 10km radius of flagship store",
-      projectId: projKulfi.id,
-      milestoneId: m4.id,
-      assignedToId: empPriya.id,
-      createdById: manager.id,
-      priority: "URGENT",
-      status: "IN_PROGRESS",
-      dueDate: new Date("2026-09-16"),
-    },
-    {
-      taskId: "TSK-107",
-      title: "Q3 Corporate Client Outreach",
-      description: "Contact 40 local corporate offices for festival gifting hampers",
-      projectId: null,
-      assignedToId: empArun.id,
-      createdById: admin.id,
-      priority: "MEDIUM",
-      status: "BLOCKED",
-      dueDate: new Date("2026-09-15"), // Overdue!
-    },
-    {
-      taskId: "TSK-108",
-      title: "E-Commerce Checkout Flow & Payment Gateway",
-      description: "Implemented Razorpay webhooks and completed mobile responsive order confirmation",
+      title: "Attendance Correction Approval Module",
+      description: "Complete Lead & Admin correction approval workflows with audit logging",
       projectId: projWorkOS.id,
       milestoneId: m2.id,
-      assignedToId: empJohn.id,
-      createdById: manager.id,
+      assignedToId: employee.id,
+      createdById: lead.id,
       priority: "HIGH",
-      status: "REVIEW",
-      dueDate: new Date("2026-09-17"),
-    },
-    {
-      taskId: "TSK-109",
-      title: "Brand Guideline & Typography Spec Sheet",
-      description: "Finalized color contrast ratios and export ready Figma tokens for client review",
-      projectId: projKulfi.id,
-      milestoneId: m3.id,
-      assignedToId: empSarah.id,
-      createdById: manager.id,
-      priority: "MEDIUM",
       status: "REVIEW",
       dueDate: new Date("2026-09-17"),
     },
@@ -376,7 +290,6 @@ async function main() {
     await prisma.task.create({ data: t });
   }
 
-  // 8. Attendance Records
   // 8. Attendance Records
   const now = new Date();
   const today = new Intl.DateTimeFormat("en-CA", {
@@ -391,10 +304,10 @@ async function main() {
   const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
   const fortyFiveMinsAgo = new Date(now.getTime() - 45 * 60 * 1000);
 
-  // John checked in on time
-  const attJohn = await prisma.attendance.create({
+  // Employee checked in today
+  const attEmployee = await prisma.attendance.create({
     data: {
-      userId: empJohn.id,
+      userId: employee.id,
       date: today,
       checkIn: fourHoursAgo,
       status: "PRESENT",
@@ -407,8 +320,8 @@ async function main() {
 
   await prisma.break.create({
     data: {
-      attendanceId: attJohn.id,
-      userId: empJohn.id,
+      attendanceId: attEmployee.id,
+      userId: employee.id,
       startTime: oneHourAgo,
       endTime: fortyFiveMinsAgo,
       durationMinutes: 15,
@@ -416,61 +329,35 @@ async function main() {
     },
   });
 
-  // Sarah checked in late
-  const attSarah = await prisma.attendance.create({
+  // Team Lead checked in today
+  await prisma.attendance.create({
     data: {
-      userId: empSarah.id,
+      userId: lead.id,
       date: today,
       checkIn: threeHoursAgo,
-      status: "LATE",
+      status: "PRESENT",
       workDurationMinutes: 210,
-      breakDurationMinutes: 0,
-      ipAddress: "192.168.1.48",
-      deviceInfo: "Safari / macOS",
-    },
-  });
-
-  // Priya Patel checked in
-  await prisma.attendance.create({
-    data: {
-      userId: empPriya.id,
-      date: today,
-      checkIn: fourHoursAgo,
-      status: "PRESENT",
-      workDurationMinutes: 240,
-      breakDurationMinutes: 30,
-      ipAddress: "192.168.1.52",
-      deviceInfo: "Firefox / Ubuntu",
-    },
-  });
-
-  // Arun is on approved leave today
-  await prisma.attendance.create({
-    data: {
-      userId: empArun.id,
-      date: today,
-      status: "ON_LEAVE",
-      workDurationMinutes: 0,
-      breakDurationMinutes: 0,
-      notes: "Casual Leave - Family function",
-    },
-  });
-
-  // Vikram Sharma (Manager) checked in
-  await prisma.attendance.create({
-    data: {
-      userId: manager.id,
-      date: today,
-      checkIn: fourHoursAgo,
-      status: "PRESENT",
-      workDurationMinutes: 240,
       breakDurationMinutes: 20,
       ipAddress: "192.168.1.10",
       deviceInfo: "Chrome 128 / Windows",
     },
   });
 
-  // Historical attendance records for all working days in September 2026 (26 working days, Mon-Sat)
+  // Super Admin checked in today
+  await prisma.attendance.create({
+    data: {
+      userId: admin.id,
+      date: today,
+      checkIn: fourHoursAgo,
+      status: "PRESENT",
+      workDurationMinutes: 240,
+      breakDurationMinutes: 0,
+      ipAddress: "192.168.1.5",
+      deviceInfo: "Edge 128 / Windows",
+    },
+  });
+
+  // Historical attendance records for September 2026 (Mon-Sat working days)
   const sundays = new Set(["2026-09-06", "2026-09-13", "2026-09-20", "2026-09-27"]);
   const septemberWorkingDays: string[] = [];
   for (let day = 1; day <= 30; day++) {
@@ -481,14 +368,13 @@ async function main() {
     }
   }
 
-  const allStaff = [admin, manager, empJohn, empSarah, empPriya, empArun];
-
-  for (const emp of allStaff) {
+  for (const u of allUsers) {
     for (const d of septemberWorkingDays) {
-      if (emp.id === empArun.id && d === "2026-09-16") {
+      // Leave on 2026-09-16 for Employee
+      if (u.id === employee.id && d === "2026-09-16") {
         await prisma.attendance.create({
           data: {
-            userId: emp.id,
+            userId: u.id,
             date: d,
             status: "ON_LEAVE",
             workDurationMinutes: 0,
@@ -499,12 +385,10 @@ async function main() {
         continue;
       }
 
-      const isLate =
-        (emp.id === empSarah.id && (d === "2026-09-12" || d === "2026-09-25")) ||
-        (emp.id === empArun.id && (d === "2026-09-11" || d === "2026-09-22"));
-
-      const inM = isLate ? 25 : 5 + (parseInt(emp.employeeId.slice(-1) || "1", 10) % 7);
-      const outM = 10 + (parseInt(emp.employeeId.slice(-1) || "1", 10) % 10);
+      // Simulate occasional late arrival for realistic metric graphs
+      const isLate = u.id === employee.id && (d === "2026-09-12" || d === "2026-09-22");
+      const inM = isLate ? 25 : 5 + (parseInt(u.employeeId.slice(-1) || "1", 10) % 7);
+      const outM = 10 + (parseInt(u.employeeId.slice(-1) || "1", 10) % 10);
       const status = isLate ? "LATE" : "PRESENT";
       const inDate = new Date(`${d}T03:${String(inM).padStart(2, "0")}:00Z`);
       const outDate = new Date(`${d}T12:${String(outM).padStart(2, "0")}:00Z`);
@@ -512,7 +396,7 @@ async function main() {
 
       await prisma.attendance.create({
         data: {
-          userId: emp.id,
+          userId: u.id,
           date: d,
           checkIn: inDate,
           checkOut: outDate,
@@ -528,34 +412,48 @@ async function main() {
   // 9. Leave Requests
   await prisma.leaveRequest.create({
     data: {
-      userId: empArun.id,
+      userId: employee.id,
       type: "CASUAL",
       startDate: "2026-09-16",
       endDate: "2026-09-16",
       totalDays: 1,
-      reason: "Attending cousin's engagement ceremony in Pune.",
+      reason: "Attending family function in hometown.",
       status: "APPROVED",
-      reviewedById: manager.id,
-      reviewNotes: "Approved. Please ensure handoff of client proposals.",
+      reviewedById: lead.id,
+      reviewNotes: "Approved. Handover critical tasks before proceeding.",
     },
   });
 
   await prisma.leaveRequest.create({
     data: {
-      userId: empSarah.id,
+      userId: employee.id,
       type: "SICK",
-      startDate: "2026-09-21",
-      endDate: "2026-09-21",
+      startDate: "2026-09-25",
+      endDate: "2026-09-25",
       totalDays: 1,
-      reason: "Routine dental surgery follow-up.",
+      reason: "Medical consultation follow-up.",
       status: "PENDING",
     },
   });
 
-  // Daily Standup EOD Updates for today
+  await prisma.leaveRequest.create({
+    data: {
+      userId: lead.id,
+      type: "CASUAL",
+      startDate: "2026-09-28",
+      endDate: "2026-09-28",
+      totalDays: 1,
+      reason: "Personal work.",
+      status: "APPROVED",
+      reviewedById: admin.id,
+      reviewNotes: "Approved. John will cover operational queries.",
+    },
+  });
+
+  // 10. Daily Standup EOD Updates for today
   await prisma.dailyUpdate.create({
     data: {
-      userId: empJohn.id,
+      userId: employee.id,
       date: today,
       completedWork: "Implemented live attendance clock with persistent state and break timer.",
       pendingWork: "Integrating dynamic weekly/monthly report generator.",
@@ -566,19 +464,19 @@ async function main() {
 
   await prisma.dailyUpdate.create({
     data: {
-      userId: empSarah.id,
+      userId: lead.id,
       date: today,
-      completedWork: "Finished Figma layout tokens and responsive mobile navigation drawer.",
-      pendingWork: "Exporting PNG assets for Mumbai Kulfi branding campaign.",
-      blockedWork: "Waiting on client logo high-res SVG assets.",
-      notes: "Need team lead assistance to expedite client communication.",
+      completedWork: "Reviewed sprint milestones, verified task assignments and checked leave approvals.",
+      pendingWork: "Architecture review for enterprise cloud portal telemetry.",
+      blockedWork: "",
+      notes: "Sprint delivery on track.",
     },
   });
 
-  // Pending Attendance Correction Request
+  // 11. Attendance Correction Request
   await prisma.attendanceCorrection.create({
     data: {
-      userId: empJohn.id,
+      userId: employee.id,
       requestedDate: "2026-09-15",
       requestedCheckIn: "09:00",
       requestedCheckOut: "18:00",
@@ -587,7 +485,7 @@ async function main() {
     },
   });
 
-  // 10. Slack-like Chat Channels
+  // 12. Chat Channels
   const chGeneral = await prisma.channel.create({
     data: {
       name: "general",
@@ -600,23 +498,7 @@ async function main() {
     data: {
       name: "development",
       topic: "Tech architecture, code reviews, PRs, and infrastructure discussions",
-      createdById: manager.id,
-    },
-  });
-
-  const chDesign = await prisma.channel.create({
-    data: {
-      name: "design",
-      topic: "UI/UX prototypes, branding guidelines, and visual asset feedback",
-      createdById: empSarah.id,
-    },
-  });
-
-  const chMarketing = await prisma.channel.create({
-    data: {
-      name: "marketing",
-      topic: "Campaign performance, social reels, ad spends and lead metrics",
-      createdById: empPriya.id,
+      createdById: lead.id,
     },
   });
 
@@ -628,10 +510,9 @@ async function main() {
     },
   });
 
-  // Channel memberships for all
-  const allUsers = [admin, manager, empJohn, empSarah, empPriya, empArun];
-  const allChannels = [chGeneral, chDev, chDesign, chMarketing, chAnnounce];
+  const allChannels = [chGeneral, chDev, chAnnounce];
 
+  // Channel memberships for the 3 users only
   for (const ch of allChannels) {
     for (const u of allUsers) {
       await prisma.channelMember.create({
@@ -653,16 +534,16 @@ async function main() {
 
   await prisma.message.create({
     data: {
-      senderId: manager.id,
+      senderId: lead.id,
       channelId: chGeneral.id,
-      content: "Great to have everything in one single place! Goodbye scattered WhatsApp groups 👋",
+      content: "Great to have everything in one single place! Team portals and real-time tracking look great 👋",
       createdAt: new Date("2026-09-16T04:05:00Z"),
     },
   });
 
   await prisma.message.create({
     data: {
-      senderId: empJohn.id,
+      senderId: employee.id,
       channelId: chDev.id,
       content: "I've pushed the latest attendance timer updates. Check-in and break tracking are synced with the server.",
       createdAt: new Date("2026-09-16T05:30:00Z"),
@@ -671,14 +552,14 @@ async function main() {
 
   await prisma.message.create({
     data: {
-      senderId: empSarah.id,
-      channelId: chDesign.id,
-      content: "Just finalized the thumbnail variations for Mumbai Kulfi Reel #1. Sharing the review links shortly!",
-      createdAt: new Date("2026-09-16T06:15:00Z"),
+      senderId: lead.id,
+      channelId: chDev.id,
+      content: "Code looks clean. I'll test the verification pipeline shortly.",
+      createdAt: new Date("2026-09-16T05:35:00Z"),
     },
   });
 
-  // 11. Announcements
+  // 13. Announcements
   await prisma.announcement.create({
     data: {
       title: "Welcome to Digitechzo WorkOS 🚀",
@@ -699,7 +580,7 @@ async function main() {
     },
   });
 
-  // 12. Holidays
+  // 14. Holidays
   const holidays = [
     { name: "Gandhi Jayanti", date: "2026-10-02" },
     { name: "Dussehra", date: "2026-10-20" },
@@ -713,7 +594,7 @@ async function main() {
     await prisma.holiday.create({ data: h });
   }
 
-  // 13. Audit Log entries
+  // 15. Audit Log entries
   await prisma.auditLog.create({
     data: {
       userId: admin.id,
@@ -726,29 +607,26 @@ async function main() {
 
   await prisma.auditLog.create({
     data: {
-      userId: manager.id,
-      userName: manager.name,
+      userId: lead.id,
+      userName: lead.name,
       action: "LEAVE_APPROVED",
       targetType: "LEAVE",
-      targetId: empArun.id,
-      details: "Approved casual leave for Arun Verma for 2026-09-16.",
+      targetId: employee.id,
+      details: "Approved casual leave for John Fernandes for 2026-09-16.",
     },
   });
 
-  console.log("✅ Seed completed successfully!");
-  console.log("-----------------------------------------");
-  console.log("Super Admin: admin@digitechzo.com / password123");
-  console.log("Manager:     manager@digitechzo.com / password123");
-  console.log("Employee:    john@digitechzo.com / password123");
-  console.log("Employee:    sarah@digitechzo.com / password123");
-  console.log("Employee:    priya@digitechzo.com / password123");
-  console.log("Employee:    arun@digitechzo.com / password123");
-  console.log("-----------------------------------------");
+  console.log("✅ Seed completed successfully! Exactly 3 user accounts created:");
+  console.log("==================================================================");
+  console.log("1. SUPER ADMIN: admin@digitechzo.com    | Password: password123 | Portal: /admin");
+  console.log("2. TEAM LEAD:   lead@digitechzo.com     | Password: password123 | Portal: /lead");
+  console.log("3. EMPLOYEE:    employee@digitechzo.com | Password: password123 | Portal: /employee");
+  console.log("==================================================================");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seed failed:", e);
     process.exit(1);
   })
   .finally(async () => {

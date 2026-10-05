@@ -15,8 +15,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let normalizedEmail = email.toLowerCase().trim();
+    if (normalizedEmail === "manager@digitechzo.com") normalizedEmail = "lead@digitechzo.com";
+    if (normalizedEmail === "john@digitechzo.com") normalizedEmail = "employee@digitechzo.com";
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: normalizedEmail },
       include: { department: true },
     });
 

@@ -204,6 +204,59 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* Quick Login Seed Accounts */}
+          {mode === "signin" && (
+            <div className="mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Quick Seed Logins (Pass: password123)
+              </p>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("admin@digitechzo.com");
+                    setPassword("password123");
+                  }}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition text-center border ${
+                    email === "admin@digitechzo.com"
+                      ? "bg-brand-500 text-white border-brand-600 shadow-sm"
+                      : "bg-white text-slate-700 hover:bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("lead@digitechzo.com");
+                    setPassword("password123");
+                  }}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition text-center border ${
+                    email === "lead@digitechzo.com"
+                      ? "bg-brand-500 text-white border-brand-600 shadow-sm"
+                      : "bg-white text-slate-700 hover:bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  Team Lead
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("employee@digitechzo.com");
+                    setPassword("password123");
+                  }}
+                  className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition text-center border ${
+                    email === "employee@digitechzo.com"
+                      ? "bg-brand-500 text-white border-brand-600 shadow-sm"
+                      : "bg-white text-slate-700 hover:bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  Employee
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* SIGN IN FORM */}
           {mode === "signin" && (
             <form className="space-y-4" onSubmit={handleSignIn}>
@@ -304,7 +357,7 @@ export default function LoginPage() {
                     required
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
-                    placeholder="john@digitechzo.com"
+                    placeholder="employee@digitechzo.com"
                     className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
                   />
                 </div>
