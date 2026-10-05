@@ -7,14 +7,19 @@ export default function TaskCreateModal({
   onClose,
   onSuccess,
   preselectedAssigneeId,
+  preselectedProjectId,
+  preselectedMilestoneId,
 }: {
   onClose: () => void;
   onSuccess: () => void;
   preselectedAssigneeId?: string;
+  preselectedProjectId?: string;
+  preselectedMilestoneId?: string;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(preselectedProjectId || "");
+  const [milestoneId, setMilestoneId] = useState(preselectedMilestoneId || "");
   const [assignedToId, setAssignedToId] = useState(preselectedAssigneeId || "");
   const [priority, setPriority] = useState("MEDIUM");
   const [dueDate, setDueDate] = useState("");
@@ -62,6 +67,7 @@ export default function TaskCreateModal({
           title,
           description,
           projectId: projectId || null,
+          milestoneId: milestoneId || null,
           assignedToId: assignedToId || null,
           priority,
           dueDate: dueDate || null,
@@ -170,6 +176,28 @@ export default function TaskCreateModal({
               </select>
             </div>
           </div>
+
+          {projectId && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Project Milestone (Optional)
+              </label>
+              <select
+                value={milestoneId}
+                onChange={(e) => setMilestoneId(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
+              >
+                <option value="">No Milestone Linked</option>
+                {projects
+                  .find((p) => p.id === projectId)
+                  ?.milestones?.map((m: any) => (
+                    <option key={m.id} value={m.id}>
+                      🎯 {m.name} ({m.status})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>

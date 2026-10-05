@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
     where,
     include: {
       project: { select: { id: true, name: true, client: true } },
+      milestone: { select: { id: true, name: true, status: true } },
       assignedTo: { select: { id: true, name: true, employeeId: true, avatarUrl: true, designation: true } },
       createdBy: { select: { id: true, name: true } },
       comments: {
@@ -88,6 +89,7 @@ export async function POST(req: NextRequest) {
       title,
       description,
       projectId,
+      milestoneId,
       assignedToId,
       priority = "MEDIUM",
       dueDate,
@@ -123,6 +125,7 @@ export async function POST(req: NextRequest) {
             title: title.trim(),
             description: description?.trim() || null,
             projectId: projectId || null,
+            milestoneId: milestoneId || null,
             assignedToId: assignedToId || null,
             createdById: user.id,
             priority,
@@ -132,6 +135,7 @@ export async function POST(req: NextRequest) {
           include: {
             assignedTo: true,
             project: true,
+            milestone: true,
           },
         });
       } catch (err: any) {
@@ -189,7 +193,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, status, priority, assignedToId, title, description, dueDate } = body;
+    const { id, status, priority, assignedToId, title, description, dueDate, projectId, milestoneId } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Task ID is required." }, { status: 400 });
@@ -225,6 +229,8 @@ export async function PATCH(req: NextRequest) {
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+      if (projectId !== undefined) updateData.projectId = projectId || null;
+      if (milestoneId !== undefined) updateData.milestoneId = milestoneId || null;
     }
 
     const updatedTask = await prisma.task.update({
@@ -233,6 +239,7 @@ export async function PATCH(req: NextRequest) {
       include: {
         assignedTo: true,
         project: true,
+        milestone: true,
       },
     });
 

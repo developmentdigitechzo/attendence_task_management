@@ -88,6 +88,11 @@ export default function TaskDetailModal({
                   in <strong className="text-slate-700">{task.project.name}</strong>
                 </span>
               )}
+              {task.milestone && (
+                <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  🎯 {task.milestone.name}
+                </span>
+              )}
             </div>
             <h2 className="text-lg font-bold text-slate-900 leading-snug">{task.title}</h2>
           </div>
