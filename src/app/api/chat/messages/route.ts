@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createNotification } from "@/lib/notify";
+import { cleanupOldMessages } from "@/lib/chatRetention";
 
 export async function GET(req: NextRequest) {
+  // Opportunistically clean up messages older than 100 days (throttled to once per 30 mins)
+  cleanupOldMessages().catch(() => {});
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -66,8 +70,25 @@ export async function POST(req: NextRequest) {
 
     const { channelId, recipientId, content, attachments, replyToId } = await req.json();
 
-    if (!content?.trim()) {
-      return NextResponse.json({ error: "Message content cannot be empty." }, { status: 400 });
+    const textContent = (content || "").trim();
+    if (!textContent && !attachments) {
+      return NextResponse.json(
+        { error: "Message content or an attachment is required." },
+        { status: 400 }
+      );
+    }
+
+    const attachmentsString =
+      typeof attachments === "object" ? JSON.stringify(attachments) : attachments || null;
+
+    // Generate descriptive fallback content if only attachments are sent
+    let fallbackText = textContent;
+    if (!fallbackText && attachmentsString) {
+      if (attachmentsString.includes('"type":"image"')) fallbackText = "📷 Shared an image";
+      else if (attachmentsString.includes('"type":"document"')) fallbackText = "📄 Shared a document";
+      else if (attachmentsString.includes('"type":"location"')) fallbackText = "📍 Shared a location";
+      else if (attachmentsString.includes('"type":"poll"')) fallbackText = "📊 Created a poll";
+      else fallbackText = "📎 Sent an attachment";
     }
 
     const message = await prisma.message.create({
@@ -75,8 +96,8 @@ export async function POST(req: NextRequest) {
         senderId: user.id,
         channelId: channelId || null,
         recipientId: recipientId || null,
-        content: content.trim(),
-        attachments: attachments || null,
+        content: fallbackText,
+        attachments: attachmentsString,
         replyToId: replyToId || null,
       },
       include: {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, UserPlus, AlertCircle, Save } from "lucide-react";
+import { X, UserPlus, AlertCircle, Save, Plus, Check } from "lucide-react";
 import { formatWorkingHours } from "@/lib/utils";
 
 interface EmployeeModalProps {
@@ -32,6 +32,45 @@ export default function EmployeeModal({
   const [managers, setManagers] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Quick add department states
+  const [showAddDept, setShowAddDept] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptCode, setNewDeptCode] = useState("");
+  const [creatingDept, setCreatingDept] = useState(false);
+  const [deptSuccessMsg, setDeptSuccessMsg] = useState<string | null>(null);
+
+  const handleCreateDepartment = async () => {
+    if (!newDeptName.trim()) return;
+    setCreatingDept(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/departments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newDeptName.trim(),
+          code: newDeptCode.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to add department.");
+      } else {
+        setDepartments((prev) => [...prev, data.department]);
+        setDepartmentId(data.department.id);
+        setNewDeptName("");
+        setNewDeptCode("");
+        setShowAddDept(false);
+        setDeptSuccessMsg(`Department "${data.department.name}" added!`);
+        setTimeout(() => setDeptSuccessMsg(null), 3500);
+      }
+    } catch {
+      setError("Network error adding department.");
+    } finally {
+      setCreatingDept(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -170,9 +209,72 @@ export default function EmployeeModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Department
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Department
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowAddDept((v) => !v)}
+                  title="Add new department"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-600 hover:text-brand-700 hover:bg-brand-50 px-2 py-0.5 rounded-md border border-brand-200 transition"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>{showAddDept ? "Close" : "New"}</span>
+                </button>
+              </div>
+
+              {showAddDept && (
+                <div className="p-2.5 bg-brand-50/70 border border-brand-200 rounded-xl space-y-2 mb-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-brand-900">
+                      Add New Department
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddDept(false)}
+                      className="text-slate-400 hover:text-slate-600 p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      value={newDeptName}
+                      onChange={(e) => setNewDeptName(e.target.value)}
+                      placeholder="Department Name (e.g. QA)"
+                      className="w-full px-2.5 py-1.5 text-xs bg-white border border-brand-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      autoFocus
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newDeptCode}
+                        onChange={(e) => setNewDeptCode(e.target.value.toUpperCase())}
+                        placeholder="Code (optional)"
+                        className="w-28 px-2.5 py-1.5 text-xs bg-white border border-brand-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 uppercase"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleCreateDepartment()}
+                        disabled={creatingDept || !newDeptName.trim()}
+                        className="flex-1 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1 shadow-xs transition"
+                      >
+                        {creatingDept ? "Adding..." : "Add Department"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {deptSuccessMsg && (
+                <p className="text-[11px] text-emerald-600 font-medium mb-1 flex items-center gap-1">
+                  <Check className="w-3 h-3" />
+                  <span>{deptSuccessMsg}</span>
+                </p>
+              )}
+
               <select
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}

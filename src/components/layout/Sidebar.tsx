@@ -96,6 +96,7 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
     { name: "Daily Standups (EOD)", href: "/lead/standup", icon: MessageSquare },
     { name: "Team Calendar", href: "/lead/calendar", icon: Calendar },
     { name: "Internal Chat", href: "/chat", icon: MessageSquare },
+    { name: "My Profile", href: "/lead/profile", icon: UserCheck },
   ];
 
   const employeeNav = [
@@ -249,7 +250,7 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
         <div className="p-4 border-t border-white/10 bg-black/30">
           <div className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition">
             <Link
-              href="/employee/profile"
+              href={isTeamLead ? "/lead/profile" : isSuperAdmin ? "/admin/settings" : "/employee/profile"}
               className="flex items-center gap-3 flex-1 min-w-0 group"
               title="View & Edit My Profile"
             >

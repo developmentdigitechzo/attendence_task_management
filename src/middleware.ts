@@ -51,32 +51,18 @@ export async function middleware(req: NextRequest) {
   };
 
   // 1. Dedicated & General Login Pages Handling
-  if (pathname === "/admin/login") {
-    if (session?.role === "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/admin", req.url));
-    }
-    return NextResponse.next();
-  }
+  const isLoginPage =
+    pathname === "/login" ||
+    pathname === "/admin/login" ||
+    pathname === "/lead/login" ||
+    pathname === "/employee/login";
 
-  if (pathname === "/lead/login") {
-    if (session && (session.role === "MANAGER" || session.role === "SUPER_ADMIN")) {
-      return NextResponse.redirect(new URL("/lead", req.url));
+  if (isLoginPage) {
+    const res = NextResponse.next();
+    if (token && !session) {
+      res.cookies.delete("auth_token");
     }
-    return NextResponse.next();
-  }
-
-  if (pathname === "/employee/login") {
-    if (session) {
-      return NextResponse.redirect(new URL("/employee", req.url));
-    }
-    return NextResponse.next();
-  }
-
-  if (pathname === "/login") {
-    if (session) {
-      return NextResponse.redirect(new URL(getPortalForRole(session.role), req.url));
-    }
-    return NextResponse.next();
+    return res;
   }
 
   // 2. Root /

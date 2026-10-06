@@ -8,7 +8,7 @@ export default async function LeadLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/lead/login");
+    redirect("/api/auth/logout?redirect=/lead/login");
   }
 
   if (user.role === "EMPLOYEE") {

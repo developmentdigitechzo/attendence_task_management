@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/api/auth/logout?redirect=/login");
   }
 
   const safeUser = {

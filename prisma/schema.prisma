@@ -23,6 +23,7 @@ model User {
   joiningDate      DateTime  @default(now())
   workLocation     String?   @default("Office")
   workingHours     String?   @default("10:00 AM - 07:00 PM")
+  pushMessageVisibility String? @default("VISIBLE") // VISIBLE, HIDE_MESSAGE, HIDDEN
   emergencyContact String?
   skills           String?   @db.Text
   bio              String?   @db.Text

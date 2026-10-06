@@ -22,12 +22,14 @@ import {
   Check,
 } from "lucide-react";
 import { formatDateDisplay, formatWorkingHours } from "@/lib/utils";
+import PushPrivacyCard, { PushVisibilityMode } from "@/components/profile/PushPrivacyCard";
 
 export default function EmployeeProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [skills, setSkills] = useState("");
+  const [pushMessageVisibility, setPushMessageVisibility] = useState<PushVisibilityMode>("VISIBLE");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export default function EmployeeProfilePage() {
           setPhone(data.user.phone || "");
           setBio(data.user.bio || "");
           setSkills(data.user.skills || "");
+          setPushMessageVisibility(data.user.pushMessageVisibility || "VISIBLE");
         }
       })
       .catch(console.error)
@@ -74,6 +77,7 @@ export default function EmployeeProfilePage() {
           phone,
           bio,
           skills,
+          pushMessageVisibility,
         }),
       });
 
@@ -267,6 +271,13 @@ export default function EmployeeProfilePage() {
             className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none resize-none"
           />
         </div>
+
+        {/* Push Message Notification Privacy (Hide/Visible Option) */}
+        <PushPrivacyCard
+          value={pushMessageVisibility}
+          onChange={setPushMessageVisibility}
+          disabled={saving}
+        />
 
         <div className="flex justify-end pt-2">
           <button

@@ -23,6 +23,7 @@ import {
 import { formatTimeIST, formatMinutes, getTodayDateString } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
 import TaskCreateModal from "@/components/tasks/TaskCreateModal";
+import AttendanceWidget from "@/components/attendance/AttendanceWidget";
 
 export default function TeamLeadDashboardPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -183,6 +184,12 @@ export default function TeamLeadDashboardPage() {
           <span>{actionMessage}</span>
         </div>
       )}
+
+      {/* Team Lead Personal Attendance & Check-In/Out */}
+      <AttendanceWidget
+        userName={currentUser?.name || "Team Lead"}
+        onStatusChange={fetchLeadData}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

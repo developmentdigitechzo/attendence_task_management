@@ -31,6 +31,7 @@ export async function GET() {
       workingHours: user.workingHours,
       skills: user.skills,
       bio: user.bio,
+      pushMessageVisibility: user.pushMessageVisibility || "VISIBLE",
     },
   });
 }

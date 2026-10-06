@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 export default async function DashboardRootPage() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login");
+    redirect("/api/auth/logout?redirect=/login");
   }
 
   if (user.role === "SUPER_ADMIN") {

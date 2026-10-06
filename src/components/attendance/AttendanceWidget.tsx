@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { formatMinutes, formatTimeIST } from "@/lib/utils";
 import CorrectionModal from "./CorrectionModal";
+import CheckInModal from "./CheckInModal";
 import { confirmAction } from "@/components/ui/ConfirmDialog";
 
 interface AttendanceWidgetProps {
@@ -32,6 +33,7 @@ export default function AttendanceWidget({
   const [breakSeconds, setBreakSeconds] = useState(0);
   const [totalBreakSeconds, setTotalBreakSeconds] = useState(0);
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
+  const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const fetchTodayAttendance = async () => {
@@ -110,24 +112,10 @@ export default function AttendanceWidget({
     return () => clearInterval(interval);
   }, [attendance, activeBreak]);
 
-  const handleCheckIn = async () => {
-    setActionLoading(true);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/attendance/check-in", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) {
-        setMessage({ text: data.error || "Failed to check in.", type: "error" });
-      } else {
-        setMessage({ text: data.message, type: "success" });
-        await fetchTodayAttendance();
-        onStatusChange?.();
-      }
-    } catch {
-      setMessage({ text: "Network error checking in.", type: "error" });
-    } finally {
-      setActionLoading(false);
-    }
+  const handleCheckInSuccess = (data: any) => {
+    setMessage({ text: data.message || "Checked in successfully!", type: "success" });
+    fetchTodayAttendance();
+    onStatusChange?.();
   };
 
   const handleCheckOut = async () => {
@@ -231,6 +219,17 @@ export default function AttendanceWidget({
               Checked Out ({attendance.status})
             </span>
           )}
+          {isCheckedIn && (
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                attendance?.notes?.includes("Work from Home")
+                  ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                  : "bg-slate-100 text-slate-700 border border-slate-200"
+              }`}
+            >
+              {attendance?.notes?.includes("Work from Home") ? "🏠 Work from Home" : "🏢 Office"}
+            </span>
+          )}
         </div>
       </div>
 
@@ -281,7 +280,7 @@ export default function AttendanceWidget({
       <div className="flex flex-wrap items-center gap-3 pt-2">
         {!isCheckedIn ? (
           <button
-            onClick={handleCheckIn}
+            onClick={() => setIsCheckInModalOpen(true)}
             disabled={actionLoading}
             className="flex-1 min-w-[200px] h-12 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition disabled:opacity-50"
           >
@@ -394,6 +393,12 @@ export default function AttendanceWidget({
           }}
         />
       )}
+
+      <CheckInModal
+        isOpen={isCheckInModalOpen}
+        onClose={() => setIsCheckInModalOpen(false)}
+        onSuccess={handleCheckInSuccess}
+      />
     </div>
   );
 }

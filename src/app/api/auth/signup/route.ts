@@ -67,9 +67,6 @@ export async function POST(req: NextRequest) {
     const ipAddress = req.headers.get("x-forwarded-for") || "127.0.0.1";
     const deviceInfo = req.headers.get("user-agent") || "Web Browser";
 
-    // Auto check-in new user for today so state is immediately WORKING upon login
-    const { ensureUserCheckedInToday } = await import("@/lib/attendance");
-    await ensureUserCheckedInToday(newUser.id, ipAddress, deviceInfo);
 
     // Create session token
     const token = await signSessionToken({

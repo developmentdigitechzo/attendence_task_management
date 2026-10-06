@@ -55,9 +55,32 @@ export async function createNotification(args: {
 }) {
   const notification = await prisma.notification.create(args);
   try {
+    let pushTitle = args.data.title;
+    let pushBody = args.data.message;
+
+    // Check recipient's pushMessageVisibility privacy preference
+    const recipient = await prisma.user.findUnique({
+      where: { id: args.data.userId },
+      select: { pushMessageVisibility: true },
+    });
+
+    const visibility = recipient?.pushMessageVisibility || "VISIBLE";
+
+    if (args.data.type === "CHAT_MESSAGE") {
+      if (visibility === "HIDE_MESSAGE") {
+        // Shows sender name in title (e.g., "Message from John"), but hides message content ("hiii")
+        pushBody = "New message received";
+      } else if (visibility === "HIDDEN") {
+        // Hides both sender name and message content
+        pushTitle = "Digitechzo WorkOS";
+        pushBody = "New notification received";
+      }
+      // If "VISIBLE", shows both sender name and message content (e.g., "Message from John" + "hiii")
+    }
+
     await sendPushToUser(args.data.userId, {
-      title: args.data.title,
-      body: args.data.message,
+      title: pushTitle,
+      body: pushBody,
       url: args.data.linkUrl || "/",
       tag: notification.id,
     });

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { formatTimeIST, formatMinutes, getTodayDateString, formatDateDisplay, formatTime12h } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
+import AttendanceWidget from "@/components/attendance/AttendanceWidget";
 
 export default function LeadAttendancePage() {
   const [workload, setWorkload] = useState<any[]>([]);
@@ -133,6 +134,12 @@ export default function LeadAttendancePage() {
           <span>{feedback}</span>
         </div>
       )}
+
+      {/* Personal Attendance Card for Team Lead */}
+      <AttendanceWidget
+        userName="Team Lead"
+        onStatusChange={fetchAttendanceData}
+      />
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">

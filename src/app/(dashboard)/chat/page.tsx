@@ -17,9 +17,24 @@ import {
   User,
   MoreVertical,
   ArrowLeft,
+  Image as ImageIcon,
+  FileText,
+  MapPin,
+  BarChart3,
+  Link2,
+  ShieldCheck,
 } from "lucide-react";
 import { formatTimeIST } from "@/lib/utils";
 import { confirmAction } from "@/components/ui/ConfirmDialog";
+import EmojiPickerPopover from "@/components/chat/EmojiPickerPopover";
+import PollModal from "@/components/chat/PollModal";
+import LocationModal from "@/components/chat/LocationModal";
+import LinkVerifyModal from "@/components/chat/LinkVerifyModal";
+import MessageAttachments from "@/components/chat/MessageAttachments";
+import { extractUrls, verifyUrl } from "@/lib/linkUtils";
+import MonthlyBackupReminder, {
+  MonthlyBackupHeaderActions,
+} from "@/components/chat/MonthlyBackupReminder";
 
 const EMOJI_LIST = ["👍", "❤️", "🚀", "🎉", "🔥", "👀", "🙌"];
 
@@ -41,6 +56,16 @@ export default function ChatPage() {
   const [editingText, setEditingText] = useState("");
   const [showEmojiPickerFor, setShowEmojiPickerFor] = useState<string | null>(null);
 
+  // Rich Chat Features State (Images, Docs, Location, Poll, Emoji, Link Verify)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [isPollModalOpen, setIsPollModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<any | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 1. Fetch current user & channels
@@ -113,12 +138,64 @@ export default function ChatPage() {
     }
   }, [messages]);
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image file size should be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingAttachment({
+        type: "image",
+        name: file.name,
+        url: reader.result as string,
+        size: file.size,
+      });
+      setShowAttachMenu(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleDocFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Document file size should be less than 10MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPendingAttachment({
+        type: "document",
+        name: file.name,
+        url: reader.result as string,
+        size: file.size,
+        ext: file.name.split(".").pop() || "doc",
+      });
+      setShowAttachMenu(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim()) return;
+    if (!messageText.trim() && !pendingAttachment) return;
 
     const textToSend = messageText.trim();
+    const attachmentToSend = pendingAttachment ? [pendingAttachment] : null;
+
     setMessageText("");
+    setPendingAttachment(null);
+    setShowEmojiPicker(false);
+    setShowAttachMenu(false);
 
     try {
       const res = await fetch("/api/chat/messages", {
@@ -128,6 +205,7 @@ export default function ChatPage() {
           channelId: activeChannelId,
           recipientId: activeRecipientId,
           content: textToSend,
+          attachments: attachmentToSend,
         }),
       });
 
@@ -413,18 +491,25 @@ export default function ChatPage() {
             )}
           </div>
 
-          {/* Search within this conversation */}
-          <div className="relative w-32 sm:w-64 shrink-0">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conversation..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100/80 rounded-lg border border-slate-200/60 focus:bg-white focus:ring-1 focus:ring-brand-500 outline-none"
-            />
+          {/* Search within this conversation & Backup Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative w-28 sm:w-56 shrink-0">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100/80 rounded-lg border border-slate-200/60 focus:bg-white focus:ring-1 focus:ring-brand-500 outline-none"
+              />
+            </div>
+
+            <MonthlyBackupHeaderActions />
           </div>
         </div>
+
+        {/* 100-Day Retention Notice & Day 30 Monthly Backup Toast / Alert Banner */}
+        <MonthlyBackupReminder />
 
         {/* Message Feed Stream */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
@@ -499,9 +584,20 @@ export default function ChatPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-700 leading-relaxed break-words whitespace-pre-line">
-                        {msg.content}
-                      </p>
+                      <>
+                        {msg.content && (
+                          <p className="text-xs text-slate-700 leading-relaxed break-words whitespace-pre-line">
+                            {msg.content}
+                          </p>
+                        )}
+                        <MessageAttachments
+                          attachmentsJson={msg.attachments}
+                          messageText={msg.content || ""}
+                          messageId={msg.id}
+                          currentUserId={currentUser?.id}
+                          onPollVoteSuccess={fetchMessages}
+                        />
+                      </>
                     )}
 
                     {/* Emoji Reactions Pill Bar */}
@@ -591,9 +687,237 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Composer */}
+        {/* Message Composer & Rich Media Toolbar */}
         <div className="p-4 bg-white border-t border-slate-200/80 shrink-0">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+          {/* Hidden File Upload Inputs */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            onChange={handleImageFileChange}
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={docInputRef}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+            onChange={handleDocFileChange}
+            className="hidden"
+          />
+
+          {/* Pending Attachment Preview Tray */}
+          {pendingAttachment && (
+            <div className="mb-2 p-2.5 bg-brand-50/80 border border-brand-200 rounded-xl flex items-center justify-between gap-2 text-xs animate-in fade-in duration-100">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {pendingAttachment.type === "image" && (
+                  <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-brand-200 bg-white shadow-2xs">
+                    <img
+                      src={pendingAttachment.url}
+                      alt="Pending"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                {pendingAttachment.type === "document" && (
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                )}
+                {pendingAttachment.type === "location" && (
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                )}
+                {pendingAttachment.type === "poll" && (
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                    <BarChart3 className="w-4 h-4" />
+                  </div>
+                )}
+
+                <div className="min-w-0">
+                  <p className="font-bold text-slate-800 truncate">
+                    {pendingAttachment.type === "image" && `Photo: ${pendingAttachment.name}`}
+                    {pendingAttachment.type === "document" && `Document: ${pendingAttachment.name}`}
+                    {pendingAttachment.type === "location" && `Location: ${pendingAttachment.label}`}
+                    {pendingAttachment.type === "poll" && `Poll: ${pendingAttachment.question}`}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {pendingAttachment.type === "image" && "Image attached • Ready to send"}
+                    {pendingAttachment.type === "document" && "File attached • Ready to send"}
+                    {pendingAttachment.type === "location" &&
+                      `${pendingAttachment.latitude?.toFixed(4)}, ${pendingAttachment.longitude?.toFixed(4)}`}
+                    {pendingAttachment.type === "poll" &&
+                      `${pendingAttachment.options?.length} voting options created`}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPendingAttachment(null)}
+                className="p-1 hover:bg-brand-100 rounded-lg text-slate-400 hover:text-rose-600 transition"
+                title="Remove attachment"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Live Link Verification Notice if user typed a URL */}
+          {(() => {
+            const detected = extractUrls(messageText);
+            if (!detected || detected.length === 0) return null;
+            return (
+              <div className="mb-2 flex items-center gap-1.5 flex-wrap">
+                {detected.map((u, i) => {
+                  const v = verifyUrl(u);
+                  if (!v) return null;
+                  return (
+                    <div
+                      key={i}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-medium border ${
+                        v.isValid
+                          ? v.isSecure
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                            : "bg-amber-50 border-amber-200 text-amber-800"
+                          : "bg-rose-50 border-rose-200 text-rose-800"
+                      }`}
+                    >
+                      {v.isValid ? (
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <X className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      )}
+                      <span className="truncate max-w-[240px]">
+                        {v.isValid
+                          ? `Verified link: ${v.hostname} (${v.isSecure ? "HTTPS Secure" : "HTTP"})`
+                          : "Invalid link format"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          <form onSubmit={handleSendMessage} className="flex items-center gap-2 relative">
+            {/* Attachment Actions Menu Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAttachMenu((prev) => !prev);
+                  setShowEmojiPicker(false);
+                }}
+                className={`p-2.5 rounded-xl transition ${
+                  showAttachMenu
+                    ? "bg-brand-100 text-brand-700"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+                title="Attach photo, document, location, poll or verify link"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+
+              {/* Attachments Dropdown Menu */}
+              {showAttachMenu && (
+                <div
+                  className="absolute bottom-full mb-2 left-0 z-40 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false);
+                      fileInputRef.current?.click();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition text-left"
+                  >
+                    <ImageIcon className="w-4 h-4 text-emerald-500" />
+                    <span>Photo / Image</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false);
+                      docInputRef.current?.click();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition text-left"
+                  >
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    <span>Document / File</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false);
+                      setIsLocationModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition text-left"
+                  >
+                    <MapPin className="w-4 h-4 text-rose-500" />
+                    <span>Share Location</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false);
+                      setIsPollModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition text-left"
+                  >
+                    <BarChart3 className="w-4 h-4 text-purple-500" />
+                    <span>Create Poll</span>
+                  </button>
+
+                  <div className="my-1 border-t border-slate-100" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAttachMenu(false);
+                      setIsLinkModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-brand-700 hover:bg-slate-50 rounded-xl transition text-left"
+                  >
+                    <Link2 className="w-4 h-4 text-cyan-600" />
+                    <span>Verify & Insert Link</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Emoji Picker Popover Toggle Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEmojiPicker((prev) => !prev);
+                  setShowAttachMenu(false);
+                }}
+                className={`p-2.5 rounded-xl transition ${
+                  showEmojiPicker
+                    ? "bg-brand-100 text-brand-700"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+                title="Insert Emoji"
+              >
+                <Smile className="w-4 h-4" />
+              </button>
+
+              {showEmojiPicker && (
+                <EmojiPickerPopover
+                  onSelectEmoji={(emoji) => {
+                    setMessageText((prev) => prev + emoji);
+                  }}
+                  onClose={() => setShowEmojiPicker(false)}
+                />
+              )}
+            </div>
+
             <input
               type="text"
               value={messageText}
@@ -607,9 +931,10 @@ export default function ChatPage() {
               }
               className="flex-1 px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
             />
+
             <button
               type="submit"
-              disabled={!messageText.trim()}
+              disabled={!messageText.trim() && !pendingAttachment}
               className="p-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-xs transition disabled:opacity-40 shrink-0"
               title="Send Message (Enter)"
             >
@@ -618,6 +943,25 @@ export default function ChatPage() {
           </form>
         </div>
       </div>
+
+      {/* Modals for Rich Attachments */}
+      <PollModal
+        isOpen={isPollModalOpen}
+        onClose={() => setIsPollModalOpen(false)}
+        onSubmitPoll={(poll) => setPendingAttachment(poll)}
+      />
+
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onSubmitLocation={(loc) => setPendingAttachment({ type: "location", ...loc })}
+      />
+
+      <LinkVerifyModal
+        isOpen={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        onInsertLink={(url) => setMessageText((prev) => (prev ? `${prev} ${url}` : url))}
+      />
 
       {/* Create Channel Modal */}
       {isCreatingChannel && (

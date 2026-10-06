@@ -15,14 +15,21 @@ import {
   CheckSquare,
   FolderGit2,
   Building,
+  Building2,
+  Home,
   X,
   Loader2,
+  Play,
+  Square,
 } from "lucide-react";
 import Link from "next/link";
 import NotificationDropdown from "./NotificationDropdown";
 import PushNotificationManager from "./PushNotificationManager";
 import { toast } from "@/components/ui/ToastProvider";
+import { confirmAction } from "@/components/ui/ConfirmDialog";
 import SearchDetailModal, { SearchDetailItem } from "./SearchDetailModal";
+import CheckInModal from "@/components/attendance/CheckInModal";
+import { isMonthlyBackupDay } from "@/lib/chatRetentionConstants";
 
 interface TopbarProps {
   user: {
@@ -36,7 +43,12 @@ interface TopbarProps {
 export default function Topbar({ user, onMenuClick }: TopbarProps) {
   const router = useRouter();
   const [timeString, setTimeString] = useState<string>("");
-  const [liveStatus, setLiveStatus] = useState<"WORKING" | "ON_BREAK" | "OFFLINE">("OFFLINE");
+  const [liveStatus, setLiveStatus] = useState<"WORKING" | "ON_BREAK" | "OFFLINE">(
+    user.role === "SUPER_ADMIN" ? "WORKING" : "OFFLINE"
+  );
+  const [workType, setWorkType] = useState<"Work from Home" | "Office" | null>(
+    user.role === "SUPER_ADMIN" ? "Office" : null
+  );
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const seenIds = useRef<Set<string> | null>(null);
@@ -164,8 +176,21 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
           setLiveStatus("ON_BREAK");
         } else if (data.attendance?.checkIn && !data.attendance?.checkOut) {
           setLiveStatus("WORKING");
+        } else if (user.role === "SUPER_ADMIN") {
+          // Admin role login is always Working
+          setLiveStatus("WORKING");
         } else {
           setLiveStatus("OFFLINE");
+        }
+
+        if (data.workType) {
+          setWorkType(data.workType);
+        } else if (data.attendance?.notes?.includes("Work from Home")) {
+          setWorkType("Work from Home");
+        } else if (user.role === "SUPER_ADMIN" || data.attendance?.checkIn) {
+          setWorkType("Office");
+        } else {
+          setWorkType(null);
         }
       }
 
@@ -196,9 +221,72 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
 
   useEffect(() => {
     fetchStatusAndNotifs();
+
+    // Check if today is the 30th day of the month for the chat backup toast
+    try {
+      const now = new Date();
+      if (isMonthlyBackupDay(now)) {
+        const topbarToastKey = `chat_backup_topbar_toast_${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}`;
+        if (localStorage.getItem(topbarToastKey) !== "true") {
+          localStorage.setItem(topbarToastKey, "true");
+          toast.notification(
+            "Today is the 30th! Reminder: Internal chat messages older than 100 days are automatically erased. Click to backup your chat.",
+            {
+              title: "Monthly Chat Backup Reminder (Day 30)",
+              href: "/chat",
+              duration: 12000,
+            }
+          );
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     const interval = setInterval(fetchStatusAndNotifs, 15000); // 15s refresh
     return () => clearInterval(interval);
   }, []);
+
+  const [quickActionLoading, setQuickActionLoading] = useState(false);
+  const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
+
+  const handleCheckInSuccess = (data: any) => {
+    const chosenWorkType = data.workType === "Work from Home" ? "Work from Home" : "Office";
+    setWorkType(chosenWorkType);
+    setLiveStatus("WORKING");
+    toast.success(
+      `Check-in successful (${chosenWorkType} - ${data.attendance?.status || "PRESENT"})!`
+    );
+    fetchStatusAndNotifs();
+  };
+
+  const handleQuickCheckOut = async () => {
+    const ok = await confirmAction({
+      title: "Confirm Check Out",
+      message: "Are you sure you want to end your workday and check out?",
+      confirmText: "Check Out",
+      variant: "danger",
+    });
+    if (!ok) return;
+
+    setQuickActionLoading(true);
+    try {
+      const res = await fetch("/api/attendance/check-out", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Check-out failed");
+      } else {
+        toast.success("Checked out successfully for the day!");
+        setLiveStatus("OFFLINE");
+        setWorkType(null);
+        fetchStatusAndNotifs();
+      }
+    } catch {
+      toast.error("Network error checking out");
+    } finally {
+      setQuickActionLoading(false);
+    }
+  };
 
   return (
     <header className="h-16 sm:h-[72px] bg-white/90 backdrop-blur border-b border-slate-200 border-t-4 border-t-brand-500 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-30 shadow-sm">
@@ -436,24 +524,112 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
           <span className="tabular-nums">{timeString || "Loading..."}</span>
         </div>
 
-        {/* Live Status Pill */}
-        {liveStatus === "WORKING" && (
-          <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-[13px] font-semibold text-brand-800 bg-brand-50 border border-brand-200 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-            <span className="hidden sm:inline">Working</span>
-          </span>
-        )}
-        {liveStatus === "ON_BREAK" && (
-          <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-[13px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span className="hidden sm:inline">On Break</span>
-          </span>
-        )}
-        {liveStatus === "OFFLINE" && (
-          <span className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-[13px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-            Offline
-          </span>
+        {/* Live Status & Quick Punch Controls for Lead & Employee */}
+        {user.role === "SUPER_ADMIN" ? (
+          <>
+            {liveStatus === "ON_BREAK" ? (
+              <span className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-[13px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 shrink-0">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span className="hidden sm:inline">On Break</span>
+              </span>
+            ) : (
+              <span
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-[13px] font-semibold border shrink-0 ${
+                  workType === "Work from Home"
+                    ? "text-indigo-900 bg-indigo-50 border-indigo-200"
+                    : "text-brand-800 bg-brand-50 border-brand-200"
+                }`}
+                title={workType === "Work from Home" ? "Checked in: Work from Home" : "Checked in: Office"}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full animate-pulse ${
+                    workType === "Work from Home" ? "bg-indigo-500" : "bg-brand-500"
+                  }`}
+                />
+                {workType === "Work from Home" ? (
+                  <Home className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                ) : (
+                  <Building2 className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                )}
+                <span className="hidden sm:inline">Working</span>
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                    workType === "Work from Home"
+                      ? "text-indigo-700 bg-indigo-100"
+                      : "text-brand-700 bg-brand-100"
+                  }`}
+                >
+                  {workType === "Work from Home" ? "Home" : "Office"}
+                </span>
+              </span>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {liveStatus === "OFFLINE" && (
+              <button
+                type="button"
+                onClick={() => setIsCheckInModalOpen(true)}
+                disabled={quickActionLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition active:scale-95 disabled:opacity-50"
+                title="Punch In for Today"
+              >
+                <Play className="w-3.5 h-3.5 fill-white" />
+                <span>Punch In</span>
+              </button>
+            )}
+
+            {liveStatus === "WORKING" && (
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                    workType === "Work from Home"
+                      ? "text-indigo-900 bg-indigo-50 border-indigo-200"
+                      : "text-brand-800 bg-brand-50 border-brand-200"
+                  }`}
+                  title={workType === "Work from Home" ? "Checked in: Work from Home" : "Checked in: Office"}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full animate-pulse ${
+                      workType === "Work from Home" ? "bg-indigo-500" : "bg-brand-500"
+                    }`}
+                  />
+                  {workType === "Work from Home" ? (
+                    <Home className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  ) : (
+                    <Building2 className="w-3.5 h-3.5 text-brand-600 shrink-0" />
+                  )}
+                  <span className="hidden sm:inline">Working</span>
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                      workType === "Work from Home"
+                        ? "text-indigo-700 bg-indigo-100"
+                        : "text-brand-700 bg-brand-100"
+                    }`}
+                  >
+                    {workType === "Work from Home" ? "Home" : "Office"}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleQuickCheckOut}
+                  disabled={quickActionLoading}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition active:scale-95 disabled:opacity-50"
+                  title="Punch Out for the Day"
+                >
+                  <Square className="w-3 h-3 fill-rose-600 text-rose-600" />
+                  <span>{quickActionLoading ? "..." : "Punch Out"}</span>
+                </button>
+              </div>
+            )}
+
+            {liveStatus === "ON_BREAK" && (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>On Break</span>
+              </span>
+            )}
+          </div>
         )}
 
         <span className="hidden sm:block w-px h-7 bg-slate-200" aria-hidden="true" />
@@ -499,6 +675,14 @@ export default function Topbar({ user, onMenuClick }: TopbarProps) {
       <SearchDetailModal
         item={selectedDetailItem}
         onClose={() => setSelectedDetailItem(null)}
+        userRole={user.role}
+      />
+
+      {/* Daily Check-In Work Type Modal */}
+      <CheckInModal
+        isOpen={isCheckInModalOpen}
+        onClose={() => setIsCheckInModalOpen(false)}
+        onSuccess={handleCheckInSuccess}
         userRole={user.role}
       />
     </header>

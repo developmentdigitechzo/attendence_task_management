@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword, signSessionToken } from "@/lib/auth";
 import { logAuditAction } from "@/lib/audit";
-import { ensureUserCheckedInToday } from "@/lib/attendance";
+import { getTodayDateString } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,12 +63,46 @@ export async function POST(req: NextRequest) {
     const ipAddress = req.headers.get("x-forwarded-for") || "127.0.0.1";
     const deviceInfo = req.headers.get("user-agent") || "Web Browser";
 
-    // Update last active time & auto check-in so user state is WORKING upon login
+    // Update last active time
     await prisma.user.update({
       where: { id: user.id },
       data: { lastActiveAt: new Date() },
     });
-    await ensureUserCheckedInToday(user.id, ipAddress, deviceInfo);
+
+    // In admin role login, automatically ensure Admin is Working for the day
+    if (user.role === "SUPER_ADMIN") {
+      try {
+        const today = getTodayDateString();
+        const existingAtt = await prisma.attendance.findUnique({
+          where: { userId_date: { userId: user.id, date: today } },
+        });
+
+        if (!existingAtt) {
+          await prisma.attendance.create({
+            data: {
+              userId: user.id,
+              date: today,
+              checkIn: new Date(),
+              status: "PRESENT",
+              notes: "[Office]",
+              ipAddress,
+              deviceInfo,
+            },
+          });
+        } else if (!existingAtt.checkIn && !existingAtt.checkOut) {
+          await prisma.attendance.update({
+            where: { id: existingAtt.id },
+            data: {
+              checkIn: new Date(),
+              status: "PRESENT",
+              notes: existingAtt.notes || "[Office]",
+            },
+          });
+        }
+      } catch (attErr) {
+        console.error("Admin attendance auto-check-in error:", attErr);
+      }
+    }
 
     // Create session token
     const token = await signSessionToken({

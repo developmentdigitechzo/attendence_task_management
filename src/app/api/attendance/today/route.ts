@@ -36,20 +36,58 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Auto check-in logged-in user if not yet checked in today so state is immediately WORKING
-  if (targetUserId === user.id && (!attendance || (!attendance.checkIn && attendance.status !== "ON_LEAVE"))) {
-    const ipAddress = req.headers.get("x-forwarded-for") || "127.0.0.1";
-    const deviceInfo = req.headers.get("user-agent") || "Web Browser";
-    const { ensureUserCheckedInToday } = await import("@/lib/attendance");
-    attendance = await ensureUserCheckedInToday(user.id, ipAddress, deviceInfo);
+  // For Admin role: ensure attendance is active/Working after login
+  if (user.role === "SUPER_ADMIN" && targetUserId === user.id) {
+    if (!attendance) {
+      try {
+        attendance = await prisma.attendance.create({
+          data: {
+            userId: user.id,
+            date: today,
+            checkIn: new Date(),
+            status: "PRESENT",
+            notes: "[Office]",
+          },
+          include: {
+            breaks: { orderBy: { startTime: "asc" } },
+            corrections: { orderBy: { createdAt: "desc" } },
+          },
+        });
+      } catch {}
+    } else if (!attendance.checkIn && !attendance.checkOut) {
+      try {
+        attendance = await prisma.attendance.update({
+          where: { id: attendance.id },
+          data: {
+            checkIn: new Date(),
+            status: "PRESENT",
+            notes: attendance.notes || "[Office]",
+          },
+          include: {
+            breaks: { orderBy: { startTime: "asc" } },
+            corrections: { orderBy: { createdAt: "desc" } },
+          },
+        });
+      } catch {}
+    }
   }
 
   // Check if there is an ongoing break
   const activeBreak = attendance?.breaks?.find((b) => b.endTime === null) || null;
 
+  let workType: "Work from Home" | "Office" | null = null;
+  if (attendance?.checkIn) {
+    if (attendance.notes?.includes("Work from Home")) {
+      workType = "Work from Home";
+    } else {
+      workType = "Office";
+    }
+  }
+
   return NextResponse.json({
     date: today,
     attendance,
     activeBreak,
+    workType,
   });
 }

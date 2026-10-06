@@ -8,7 +8,7 @@ export default async function AdminLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/admin/login");
+    redirect("/api/auth/logout?redirect=/admin/login");
   }
 
   if (user.role !== "SUPER_ADMIN") {

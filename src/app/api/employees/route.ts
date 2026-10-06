@@ -198,7 +198,21 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, status, name, phone, designation, departmentId, managerId, role, workLocation, workingHours, bio, skills } = body;
+    const {
+      id,
+      status,
+      name,
+      phone,
+      designation,
+      departmentId,
+      managerId,
+      role,
+      workLocation,
+      workingHours,
+      bio,
+      skills,
+      pushMessageVisibility,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Employee ID is required." }, { status: 400 });
@@ -221,10 +235,15 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
-      // Employee can update phone, bio, skills
+      // Employee can update phone, bio, skills, pushMessageVisibility
       const updated = await prisma.user.update({
         where: { id },
-        data: { phone: cleanPhone, bio, skills },
+        data: {
+          phone: cleanPhone,
+          bio,
+          skills,
+          ...(pushMessageVisibility !== undefined ? { pushMessageVisibility } : {}),
+        },
       });
 
       return NextResponse.json({ success: true, employee: updated });
@@ -247,6 +266,7 @@ export async function PATCH(req: NextRequest) {
     if (workingHours !== undefined) updateData.workingHours = workingHours;
     if (bio !== undefined) updateData.bio = bio;
     if (skills !== undefined) updateData.skills = skills;
+    if (pushMessageVisibility !== undefined) updateData.pushMessageVisibility = pushMessageVisibility;
 
     const updated = await prisma.user.update({
       where: { id },
