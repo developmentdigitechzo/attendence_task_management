@@ -256,7 +256,7 @@ model Message {
   channelId   String?   // null if direct message
   recipientId String?   // recipient user ID for direct message
   content     String    @db.Text
-  attachments String?   @db.Text
+  attachments String?   @db.LongText
   isPinned    Boolean   @default(false)
   replyToId   String?
   editedAt    DateTime?

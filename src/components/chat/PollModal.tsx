@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, Plus, Trash2, X, Check } from "lucide-react";
+import { BarChart3, Plus, Trash2, X, Check, Loader2 } from "lucide-react";
 
 interface PollModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmitPoll: (pollData: {
+    type: "poll";
     question: string;
     options: { id: string; text: string; votes: string[] }[];
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 export default function PollModal({
@@ -20,6 +21,7 @@ export default function PollModal({
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -45,7 +47,7 @@ export default function PollModal({
     setOptions(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -61,6 +63,7 @@ export default function PollModal({
     }
 
     const pollPayload = {
+      type: "poll" as const,
       question: question.trim(),
       options: cleanOptions.map((text, idx) => ({
         id: `opt_${Date.now()}_${idx}`,
@@ -69,8 +72,18 @@ export default function PollModal({
       })),
     };
 
-    onSubmitPoll(pollPayload);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSubmitPoll(pollPayload);
+      setQuestion("");
+      setOptions(["", ""]);
+      setError(null);
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || "Failed to create poll.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -173,10 +186,20 @@ export default function PollModal({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-xs transition flex items-center gap-1.5"
+              disabled={isSubmitting}
+              className="px-5 py-2 text-xs font-bold bg-brand-600 hover:bg-brand-700 active:bg-brand-800 disabled:opacity-50 text-white rounded-xl shadow-xs transition flex items-center gap-1.5"
             >
-              <Check className="w-3.5 h-3.5" />
-              <span>Create Poll</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Create Poll</span>
+                </>
+              )}
             </button>
           </div>
         </form>

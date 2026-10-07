@@ -86,8 +86,11 @@ export async function POST(req: NextRequest) {
     if (!fallbackText && attachmentsString) {
       if (attachmentsString.includes('"type":"image"')) fallbackText = "📷 Shared an image";
       else if (attachmentsString.includes('"type":"document"')) fallbackText = "📄 Shared a document";
-      else if (attachmentsString.includes('"type":"location"')) fallbackText = "📍 Shared a location";
-      else if (attachmentsString.includes('"type":"poll"')) fallbackText = "📊 Created a poll";
+      else if (
+        attachmentsString.includes('"type":"poll"') ||
+        (attachmentsString.includes('"question"') && attachmentsString.includes('"options"'))
+      )
+        fallbackText = "📊 Created a poll";
       else fallbackText = "📎 Sent an attachment";
     }
 

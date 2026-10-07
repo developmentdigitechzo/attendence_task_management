@@ -101,7 +101,13 @@ export default function MessageAttachments({
     ? attachments.filter((a) => a && typeof a === "object" && a.type === "location")
     : [];
   const pollAttachments = Array.isArray(attachments)
-    ? attachments.filter((a) => a && typeof a === "object" && a.type === "poll" && Array.isArray(a.options))
+    ? attachments.filter(
+        (a) =>
+          a &&
+          typeof a === "object" &&
+          (a.type === "poll" || (Boolean(a.question) && Array.isArray(a.options))) &&
+          Array.isArray(a.options)
+      )
     : [];
 
   const hasAnyAttachments =

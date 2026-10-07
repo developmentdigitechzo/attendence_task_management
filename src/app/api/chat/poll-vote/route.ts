@@ -29,12 +29,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid poll attachments format." }, { status: 400 });
     }
 
-    const pollIndex = attachments.findIndex((a) => a.type === "poll");
+    const pollIndex = attachments.findIndex(
+      (a) => a && (a.type === "poll" || (Boolean(a.question) && Array.isArray(a.options)))
+    );
     if (pollIndex === -1) {
       return NextResponse.json({ error: "No poll found in this message." }, { status: 404 });
     }
 
     const poll = attachments[pollIndex];
+    if (!poll.type) {
+      poll.type = "poll";
+    }
 
     // Update votes: each option has votes: string[] (array of user IDs)
     poll.options = poll.options.map((opt: any) => {

@@ -23,6 +23,7 @@ import {
   BarChart3,
   Link2,
   ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import { formatTimeIST } from "@/lib/utils";
 import { confirmAction } from "@/components/ui/ConfirmDialog";
@@ -138,56 +139,155 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image file size should be less than 5MB.");
+  const processImageFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image file size should be less than 10MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
+    // Set immediate preview
+    const localUrl = URL.createObjectURL(file);
+    setPendingAttachment({
+      type: "image",
+      name: file.name || "photo.png",
+      url: localUrl,
+      size: file.size,
+      isUploading: true,
+    });
+    setShowAttachMenu(false);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/chat/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+
       setPendingAttachment({
         type: "image",
-        name: file.name,
-        url: reader.result as string,
-        size: file.size,
+        name: data.name || file.name,
+        url: data.url,
+        size: data.size || file.size,
+        isUploading: false,
       });
-      setShowAttachMenu(false);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn("Upload endpoint fallback to base64 data:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPendingAttachment({
+          type: "image",
+          name: file.name || "photo.png",
+          url: reader.result as string,
+          size: file.size,
+          isUploading: false,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const processDocFile = async (file: File) => {
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Document file size should be less than 15MB.");
+      return;
+    }
+
+    setPendingAttachment({
+      type: "document",
+      name: file.name,
+      url: "",
+      size: file.size,
+      ext: file.name.split(".").pop() || "doc",
+      isUploading: true,
+    });
+    setShowAttachMenu(false);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/chat/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload document");
+      }
+
+      setPendingAttachment({
+        type: "document",
+        name: data.name || file.name,
+        url: data.url,
+        size: data.size || file.size,
+        ext: file.name.split(".").pop() || "doc",
+        isUploading: false,
+      });
+    } catch (err) {
+      console.warn("Doc upload fallback to base64:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPendingAttachment({
+          type: "document",
+          name: file.name,
+          url: reader.result as string,
+          size: file.size,
+          ext: file.name.split(".").pop() || "doc",
+          isUploading: false,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
     e.target.value = "";
   };
 
   const handleDocFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Document file size should be less than 10MB.");
-      return;
+    if (file) {
+      processDocFile(file);
     }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPendingAttachment({
-        type: "document",
-        name: file.name,
-        url: reader.result as string,
-        size: file.size,
-        ext: file.name.split(".").pop() || "doc",
-      });
-      setShowAttachMenu(false);
-    };
-    reader.readAsDataURL(file);
     e.target.value = "";
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith("image/")) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          processImageFile(file);
+          return;
+        }
+      }
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageText.trim() && !pendingAttachment) return;
+
+    if (pendingAttachment?.isUploading) {
+      alert("Attachment is still uploading. Please wait a moment.");
+      return;
+    }
 
     const textToSend = messageText.trim();
     const attachmentToSend = pendingAttachment ? [pendingAttachment] : null;
@@ -212,9 +312,42 @@ export default function ChatPage() {
       if (res.ok) {
         fetchMessages();
         fetchChannels();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to send message. Please try again.");
       }
     } catch (e) {
-      console.error(e);
+      console.error("Send message error:", e);
+      alert("Network error sending message.");
+    }
+  };
+
+  const handleCreatePollSubmit = async (pollData: any) => {
+    const pollPayload = { type: "poll", ...pollData };
+    try {
+      const res = await fetch("/api/chat/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelId: activeChannelId,
+          recipientId: activeRecipientId,
+          content: messageText.trim() || `📊 Poll: ${pollData.question}`,
+          attachments: [pollPayload],
+        }),
+      });
+
+      if (res.ok) {
+        setMessageText("");
+        setPendingAttachment(null);
+        await fetchMessages();
+        await fetchChannels();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to create poll. Please try again.");
+      }
+    } catch (e) {
+      console.error("Create poll error:", e);
+      alert("Network error creating poll.");
     }
   };
 
@@ -710,17 +843,26 @@ export default function ChatPage() {
             <div className="mb-2 p-2.5 bg-brand-50/80 border border-brand-200 rounded-xl flex items-center justify-between gap-2 text-xs animate-in fade-in duration-100">
               <div className="flex items-center gap-2.5 min-w-0">
                 {pendingAttachment.type === "image" && (
-                  <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-brand-200 bg-white shadow-2xs">
+                  <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-brand-200 bg-white shadow-2xs relative">
                     <img
                       src={pendingAttachment.url}
                       alt="Pending"
                       className="w-full h-full object-cover"
                     />
+                    {pendingAttachment.isUploading && (
+                      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      </div>
+                    )}
                   </div>
                 )}
                 {pendingAttachment.type === "document" && (
                   <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                    <FileText className="w-4 h-4" />
+                    {pendingAttachment.isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
                   </div>
                 )}
                 {pendingAttachment.type === "location" && (
@@ -742,12 +884,20 @@ export default function ChatPage() {
                     {pendingAttachment.type === "poll" && `Poll: ${pendingAttachment.question}`}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {pendingAttachment.type === "image" && "Image attached • Ready to send"}
-                    {pendingAttachment.type === "document" && "File attached • Ready to send"}
-                    {pendingAttachment.type === "location" &&
-                      `${pendingAttachment.latitude?.toFixed(4)}, ${pendingAttachment.longitude?.toFixed(4)}`}
-                    {pendingAttachment.type === "poll" &&
-                      `${pendingAttachment.options?.length} voting options created`}
+                    {pendingAttachment.isUploading ? (
+                      <span className="flex items-center gap-1.5 text-brand-600 font-medium">
+                        <Loader2 className="w-3 h-3 animate-spin" /> Uploading file...
+                      </span>
+                    ) : (
+                      <>
+                        {pendingAttachment.type === "image" && "Image attached • Ready to send"}
+                        {pendingAttachment.type === "document" && "File attached • Ready to send"}
+                        {pendingAttachment.type === "location" &&
+                          `${pendingAttachment.latitude?.toFixed(4)}, ${pendingAttachment.longitude?.toFixed(4)}`}
+                        {pendingAttachment.type === "poll" &&
+                          `${pendingAttachment.options?.length} voting options created`}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -922,6 +1072,7 @@ export default function ChatPage() {
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
+              onPaste={handlePaste}
               placeholder={
                 activeChannel
                   ? `Message #${activeChannel.name}...`
@@ -934,11 +1085,15 @@ export default function ChatPage() {
 
             <button
               type="submit"
-              disabled={!messageText.trim() && !pendingAttachment}
-              className="p-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-xs transition disabled:opacity-40 shrink-0"
+              disabled={(!messageText.trim() && !pendingAttachment) || pendingAttachment?.isUploading}
+              className="p-2.5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-xs transition disabled:opacity-40 shrink-0 flex items-center justify-center min-w-[36px]"
               title="Send Message (Enter)"
             >
-              <Send className="w-4 h-4" />
+              {pendingAttachment?.isUploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </button>
           </form>
         </div>
@@ -948,7 +1103,7 @@ export default function ChatPage() {
       <PollModal
         isOpen={isPollModalOpen}
         onClose={() => setIsPollModalOpen(false)}
-        onSubmitPoll={(poll) => setPendingAttachment(poll)}
+        onSubmitPoll={handleCreatePollSubmit}
       />
 
       <LocationModal
