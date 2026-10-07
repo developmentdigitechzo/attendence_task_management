@@ -108,14 +108,14 @@ export default function PushNotificationManager() {
     <button
       onClick={subscribed ? disable : enable}
       disabled={busy}
-      className="relative p-2.5 text-slate-600 bg-slate-50 border border-slate-200 hover:text-brand-700 hover:bg-brand-50 hover:border-brand-200 rounded-xl transition disabled:opacity-50"
+      className="relative p-1.5 sm:p-2.5 text-slate-600 bg-slate-50 border border-slate-200 hover:text-brand-700 hover:bg-brand-50 hover:border-brand-200 rounded-xl transition disabled:opacity-50"
       title={subscribed ? "Push notifications on (click to turn off)" : "Enable push notifications"}
       aria-label={subscribed ? "Disable push notifications" : "Enable push notifications"}
     >
       {subscribed ? (
-        <BellRing className="w-[18px] h-[18px] text-brand-600" />
+        <BellRing className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-brand-600" />
       ) : (
-        <BellOff className="w-[18px] h-[18px]" />
+        <BellOff className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
       )}
     </button>
   );

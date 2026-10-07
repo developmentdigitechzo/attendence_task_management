@@ -7,10 +7,10 @@ import {
   Mail,
   CheckCircle2,
   AlertCircle,
-  Loader2,
   X,
-  Sparkles,
+  Clock,
 } from "lucide-react";
+import { AntdFormItem, AntdInput, AntdButton } from "@/components/ui/AntdUI";
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -65,212 +65,156 @@ export default function CheckInModal({
     userRole === "MANAGER" ? "Managing Director / Admin" : "Team Lead";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden"
+        className="relative w-full max-w-md bg-white rounded-lg shadow-[0_6px_16px_0_rgba(0,0,0,0.08),0_3px_6px_-4px_rgba(0,0,0,0.12),0_9px_28px_8px_rgba(0,0,0,0.05)] border border-[#f0f0f0] overflow-hidden max-h-[92dvh] flex flex-col animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header Gradient */}
-        <div className="bg-gradient-to-r from-brand-600 via-brand-700 to-indigo-800 p-6 text-white relative">
+        {/* Antd Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f0f0]">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-brand-600" />
+            <div>
+              <h3 className="font-semibold text-base text-slate-800 leading-snug">
+                Attendance Punch-In
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Select your work mode for today
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="absolute top-4 right-4 p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition"
+            className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
             aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
-
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-semibold text-white/90 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Daily Attendance Punch-In</span>
-          </div>
-
-          <h3 className="text-xl font-bold tracking-tight text-white">
-            Select Your Work Type
-          </h3>
-          <p className="text-xs text-brand-100 mt-1">
-            Specify whether you are working from the office or remotely today before punching in.
-          </p>
         </div>
 
-        {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto flex-1">
           {error && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+            <div className="mb-4 p-3 bg-[#fff2f0] text-[#cf1322] text-xs rounded border border-[#ffccc7] flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Work Type Radio Options */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-              Work Type <span className="text-rose-500">*</span>
-            </label>
+          <form id="check-in-form" onSubmit={handleSubmit} className="space-y-4">
+            {/* Work Type Options */}
+            <div>
+              <label className="flex items-center gap-1 text-[13px] font-normal text-slate-700 mb-2">
+                <span className="text-[#ff4d4f] font-mono">*</span>
+                <span>Work Location</span>
+              </label>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Option 1: Office */}
-              <label
-                className={`relative flex items-center gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition ${
-                  workType === "Office"
-                    ? "border-brand-600 bg-brand-50/50 shadow-sm shadow-brand-500/10"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="workType"
-                  value="Office"
-                  checked={workType === "Office"}
-                  onChange={() => setWorkType("Office")}
-                  className="sr-only"
-                />
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              <div className="grid grid-cols-2 gap-3">
+                {/* Option 1: Office */}
+                <label
+                  className={`flex items-center gap-2.5 p-3 rounded-md border cursor-pointer transition-all ${
                     workType === "Office"
-                      ? "bg-brand-600 text-white"
-                      : "bg-slate-100 text-slate-600"
+                      ? "border-brand-500 bg-brand-50/40 text-brand-700 shadow-xs ring-1 ring-brand-500"
+                      : "border-[#d9d9d9] hover:border-brand-300 bg-white text-slate-700"
                   }`}
                 >
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 leading-tight">Office</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">On-premise desk</p>
-                </div>
-                <div className="ml-auto">
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      workType === "Office"
-                        ? "border-brand-600 bg-brand-600"
-                        : "border-slate-300"
-                    }`}
-                  >
-                    {workType === "Office" && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
+                  <input
+                    type="radio"
+                    name="workType"
+                    value="Office"
+                    checked={workType === "Office"}
+                    onChange={() => setWorkType("Office")}
+                    className="sr-only"
+                  />
+                  <Building2 className={`w-4 h-4 ${workType === "Office" ? "text-brand-600" : "text-slate-400"}`} />
+                  <div>
+                    <p className="text-xs font-semibold leading-tight">Office</p>
+                    <p className="text-[11px] text-slate-400">On-premise</p>
                   </div>
-                </div>
-              </label>
+                </label>
 
-              {/* Option 2: Work from Home */}
-              <label
-                className={`relative flex items-center gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition ${
-                  workType === "Work from Home"
-                    ? "border-indigo-600 bg-indigo-50/50 shadow-sm shadow-indigo-500/10"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="workType"
-                  value="Work from Home"
-                  checked={workType === "Work from Home"}
-                  onChange={() => setWorkType("Work from Home")}
-                  className="sr-only"
-                />
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                {/* Option 2: Work from Home */}
+                <label
+                  className={`flex items-center gap-2.5 p-3 rounded-md border cursor-pointer transition-all ${
                     workType === "Work from Home"
-                      ? "bg-indigo-600 text-white"
-                      : "bg-slate-100 text-slate-600"
+                      ? "border-brand-500 bg-brand-50/40 text-brand-700 shadow-xs ring-1 ring-brand-500"
+                      : "border-[#d9d9d9] hover:border-brand-300 bg-white text-slate-700"
                   }`}
                 >
-                  <Home className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 leading-tight">
-                    Work from Home
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Remote workday</p>
-                </div>
-                <div className="ml-auto">
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      workType === "Work from Home"
-                        ? "border-indigo-600 bg-indigo-600"
-                        : "border-slate-300"
-                    }`}
-                  >
-                    {workType === "Work from Home" && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
+                  <input
+                    type="radio"
+                    name="workType"
+                    value="Work from Home"
+                    checked={workType === "Work from Home"}
+                    onChange={() => setWorkType("Work from Home")}
+                    className="sr-only"
+                  />
+                  <Home className={`w-4 h-4 ${workType === "Work from Home" ? "text-brand-600" : "text-slate-400"}`} />
+                  <div>
+                    <p className="text-xs font-semibold leading-tight">Remote (WFH)</p>
+                    <p className="text-[11px] text-slate-400">Home office</p>
                   </div>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Special Email Dispatch Notice when Work From Home is selected */}
-          {workType === "Work from Home" && (
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 animate-in fade-in duration-200">
-              <div className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
-                  <Mail className="w-4 h-4 text-amber-700" />
-                </div>
-                <div className="text-xs">
-                  <p className="font-bold text-amber-900">
-                    Email Notification to Team Lead ({recipientLabel})
-                  </p>
-                  <p className="text-amber-800/90 mt-0.5 leading-relaxed">
-                    Selecting <strong>Work from Home</strong> will automatically send an email alert to{" "}
-                    <strong className="text-amber-950 font-semibold underline">manimehalaidigitechzo@gmail.com</strong> informing them of your remote status today.
-                  </p>
-                </div>
+                </label>
               </div>
             </div>
-          )}
 
-          {/* Optional Notes input */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Reason / Note {workType === "Work from Home" ? "(optional for Lead)" : "(optional)"}
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={
-                workType === "Work from Home"
-                  ? "e.g., Working remotely today, reachable on Slack & phone"
-                  : "e.g., Working from 2nd floor lab"
-              }
-              maxLength={150}
-              className="w-full px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 bg-slate-50 hover:bg-slate-100/70 focus:bg-white rounded-xl border border-slate-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 outline-none transition"
-            />
-          </div>
+            {/* Notification Notice */}
+            {workType === "Work from Home" && (
+              <div className="p-3 rounded-md bg-[#e6f4ff] border border-[#91caff] text-[#0958d9] text-xs">
+                <div className="flex items-start gap-2">
+                  <Mail className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-slate-800">
+                      Alerting {recipientLabel}
+                    </p>
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                      An automated notification will be emailed to management recording your remote work status for today.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition disabled:opacity-50"
+            {/* Optional Notes */}
+            <AntdFormItem
+              label="Punch-In Note"
+              help="Optional brief update or task focus for the day"
+              className="mb-0"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 active:bg-brand-800 rounded-xl shadow-md shadow-brand-600/25 transition flex items-center gap-2 disabled:opacity-50"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                  <span>Punching In...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                  <span>Confirm Check In</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+              <AntdInput
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={
+                  workType === "Work from Home"
+                    ? "e.g. Working remotely today, reachable on Slack"
+                    : "e.g. Desk #4"
+                }
+                maxLength={150}
+              />
+            </AntdFormItem>
+          </form>
+        </div>
+
+        {/* Antd Modal Footer */}
+        <div className="flex items-center justify-end gap-2 px-6 py-3 border-t border-[#f0f0f0] bg-slate-50/50 rounded-b-lg">
+          <AntdButton type="default" onClick={onClose} disabled={submitting}>
+            Cancel
+          </AntdButton>
+          <AntdButton
+            type="primary"
+            loading={submitting}
+            icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+            onClick={() => {
+              const form = document.getElementById("check-in-form") as HTMLFormElement;
+              if (form) form.requestSubmit();
+            }}
+          >
+            Confirm Check In
+          </AntdButton>
+        </div>
       </div>
     </div>
   );

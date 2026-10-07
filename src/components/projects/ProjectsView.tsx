@@ -23,6 +23,7 @@ import {
   CheckSquare,
   AlertCircle,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { formatDateDisplay } from "@/lib/utils";
 import TaskCreateModal from "@/components/tasks/TaskCreateModal";
@@ -489,13 +490,41 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
           </div>
 
           {loading ? (
-            <div className="py-16 text-center text-slate-400 text-xs">Loading projects...</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 w-28 bg-slate-200 rounded-full skeleton-shimmer" />
+                    <div className="h-4 w-16 bg-slate-200 rounded-full skeleton-shimmer" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-5 w-3/4 bg-slate-200 rounded-lg skeleton-shimmer" />
+                    <div className="h-3.5 w-full bg-slate-100 rounded skeleton-shimmer" />
+                    <div className="h-3.5 w-2/3 bg-slate-100 rounded skeleton-shimmer" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-5 w-24 bg-slate-100 rounded-md skeleton-shimmer" />
+                    <div className="h-5 w-20 bg-slate-100 rounded-md skeleton-shimmer" />
+                  </div>
+                  <div className="pt-4 border-t border-slate-100 space-y-3">
+                    <div className="h-2 w-full bg-slate-200 rounded-full skeleton-shimmer" />
+                    <div className="flex justify-between items-center pt-1">
+                      <div className="h-3.5 w-24 bg-slate-100 rounded skeleton-shimmer" />
+                      <div className="h-6 w-16 bg-slate-200 rounded-full skeleton-shimmer" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : filteredProjects.length === 0 ? (
             <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">
               No matching projects found.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {filteredProjects.map((proj) => (
                 <div
                   key={proj.id}
@@ -689,7 +718,26 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
           </div>
 
           {loading ? (
-            <div className="py-16 text-center text-slate-400 text-xs">Loading milestones...</div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-3"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1 max-w-xl">
+                      <div className="flex gap-2">
+                        <div className="h-4 w-28 bg-slate-200 rounded-full skeleton-shimmer" />
+                        <div className="h-4 w-20 bg-slate-200 rounded-full skeleton-shimmer" />
+                      </div>
+                      <div className="h-5 w-1/2 bg-slate-200 rounded-lg skeleton-shimmer" />
+                      <div className="h-3.5 w-3/4 bg-slate-100 rounded skeleton-shimmer" />
+                    </div>
+                    <div className="h-8 w-24 bg-slate-100 rounded-xl skeleton-shimmer" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : filteredMilestones.length === 0 ? (
             <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 text-xs">
               No milestones found. Click &quot;Add Milestone&quot; to link tasks to sprint roadmaps.
@@ -822,8 +870,8 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
 
       {/* PROJECT DETAIL MODAL */}
       {viewingProject && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-6">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-6 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-slate-100">
               <div>
@@ -1083,8 +1131,8 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
 
       {/* CREATE / EDIT PROJECT MODAL */}
       {isProjectModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h3 className="font-bold text-base text-slate-900">
                 {editingProjectId ? "Edit Project" : "Create New Project"}
@@ -1233,9 +1281,18 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
                 <button
                   type="submit"
                   disabled={submittingProject}
-                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-xs disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-xs disabled:opacity-50 flex items-center gap-2"
                 >
-                  {submittingProject ? "Saving..." : editingProjectId ? "Update Project" : "Create Project"}
+                  {submittingProject ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : editingProjectId ? (
+                    "Update Project"
+                  ) : (
+                    "Create Project"
+                  )}
                 </button>
               </div>
             </form>
@@ -1245,8 +1302,8 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
 
       {/* CREATE / EDIT MILESTONE MODAL */}
       {isMilestoneModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Flag className="w-5 h-5 text-amber-500" />
@@ -1370,9 +1427,18 @@ export default function ProjectsView({ userRole }: { userRole: string }) {
                 <button
                   type="submit"
                   disabled={submittingMilestone}
-                  className="px-5 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-xs disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl shadow-xs disabled:opacity-50 flex items-center gap-2"
                 >
-                  {submittingMilestone ? "Saving..." : editingMilestoneId ? "Update Milestone" : "Save Milestone"}
+                  {submittingMilestone ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : editingMilestoneId ? (
+                    "Update Milestone"
+                  ) : (
+                    "Save Milestone"
+                  )}
                 </button>
               </div>
             </form>

@@ -11,6 +11,7 @@ import {
   Building,
   X,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { formatDateDisplay } from "@/lib/utils";
 
@@ -231,8 +232,8 @@ export default function AdminAnnouncementsPage() {
 
       {/* Post Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 ease-out">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <h3 className="font-bold text-base text-slate-900">Post Announcement</h3>
               <button
@@ -285,7 +286,7 @@ export default function AdminAnnouncementsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Priority
@@ -360,9 +361,19 @@ export default function AdminAnnouncementsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-sm disabled:opacity-50"
+                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-1.5 interactive-tap"
                 >
-                  {submitting ? "Broadcasting..." : "Broadcast Notice"}
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Broadcasting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Broadcast Notice</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

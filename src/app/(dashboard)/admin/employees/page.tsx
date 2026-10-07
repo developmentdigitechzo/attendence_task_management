@@ -18,6 +18,8 @@ import {
 import EmployeeModal from "@/components/employees/EmployeeModal";
 import { formatDateDisplay } from "@/lib/utils";
 import { confirmAction } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/ToastProvider";
+import { AntdButton, AntdInput, AntdSelect } from "@/components/ui/AntdUI";
 
 export default function AdminEmployeesPage() {
   const searchParams = useSearchParams();
@@ -86,19 +88,23 @@ export default function AdminEmployeesPage() {
       confirmText: isDeactivate ? "Deactivate" : "Activate",
       variant: isDeactivate ? "danger" : "default",
     });
-    if (!ok) return;
+    // Optimistic status update
+    const previousEmployees = [...employees];
+    setEmployees((prev) =>
+      prev.map((e) => (e.id === emp.id ? { ...e, status: newStatus } : e))
+    );
+    toast.success(`${emp.name} account ${newStatus === "DEACTIVATED" ? "deactivated" : "reactivated"}.`);
 
     try {
       const res = await fetch("/api/employees", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-skip-toast": "1" },
         body: JSON.stringify({ id: emp.id, status: newStatus }),
       });
-      if (res.ok) {
-        fetchEmployees();
-      }
-    } catch (e) {
-      console.error(e);
+      if (!res.ok) throw new Error("Failed to toggle status");
+    } catch {
+      setEmployees(previousEmployees);
+      toast.error("Could not update employee status. Reverted.");
     }
   };
 
@@ -115,70 +121,73 @@ export default function AdminEmployeesPage() {
           </p>
         </div>
 
-        <button
+        <AntdButton
+          type="primary"
+          icon={<UserPlus className="w-3.5 h-3.5" />}
           onClick={() => {
             setEditingEmployee(null);
             setIsModalOpen(true);
           }}
-          className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto"
+          className="!h-9"
         >
-          <UserPlus className="w-4 h-4" />
-          <span>Onboard New Employee</span>
-        </button>
+          Onboard New Employee
+        </AntdButton>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-3 card-hover">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
+      {/* Filter Bar (Antd Card style) */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-wrap items-center gap-2.5 sm:gap-3">
+        <div className="flex-1 min-w-[200px]">
+          <AntdInput
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, employee ID, designation..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
+            prefix={<Search className="w-3.5 h-3.5" />}
           />
         </div>
 
-        <select
-          value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none"
-        >
-          <option value="ALL">All Departments</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <div className="min-w-[140px]">
+          <AntdSelect
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+          >
+            <option value="ALL">All Departments</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </AntdSelect>
+        </div>
 
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none"
-        >
-          <option value="ALL">All Roles</option>
-          <option value="SUPER_ADMIN">Super Admin</option>
-          <option value="MANAGER">Manager</option>
-          <option value="EMPLOYEE">Employee</option>
-        </select>
+        <div className="min-w-[120px]">
+          <AntdSelect
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="ALL">All Roles</option>
+            <option value="SUPER_ADMIN">Super Admin</option>
+            <option value="MANAGER">Manager</option>
+            <option value="EMPLOYEE">Employee</option>
+          </AntdSelect>
+        </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none"
-        >
-          <option value="ALL">All Statuses</option>
-          <option value="ACTIVE">Active Only</option>
-          <option value="DEACTIVATED">Deactivated</option>
-        </select>
+        <div className="min-w-[120px]">
+          <AntdSelect
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="ACTIVE">Active Only</option>
+            <option value="DEACTIVATED">Deactivated</option>
+          </AntdSelect>
+        </div>
       </div>
 
-      {/* Employee Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+      {/* Employee Table (Antd Card style) */}
+      <div className="bg-white rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[700px]">
             <thead>
               <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                 <th className="py-3.5 px-4 font-semibold">Employee</th>
@@ -192,11 +201,25 @@ export default function AdminEmployeesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading employee directory...
-                  </td>
-                </tr>
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={`emp-skel-${i}`} className="animate-pulse">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="w-28 h-3.5 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="w-20 h-2.5 bg-slate-100 rounded skeleton-shimmer" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4"><div className="w-20 h-3.5 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-16 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-24 h-3.5 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-20 h-3.5 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-16 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4 text-right"><div className="w-12 h-6 bg-slate-200 rounded-lg ml-auto skeleton-shimmer" /></td>
+                  </tr>
+                ))
               ) : employees.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">

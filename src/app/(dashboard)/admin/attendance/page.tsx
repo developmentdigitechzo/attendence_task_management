@@ -217,7 +217,7 @@ export default function AdminAttendancePage() {
       </div>
 
       {/* Metric Counters for Selected Date */}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs card-hover">
           <p className="text-[11px] font-medium text-slate-400 uppercase">Present</p>
           <p className="text-xl font-bold text-emerald-600 mt-1">{stats.present}</p>
@@ -257,8 +257,8 @@ export default function AdminAttendancePage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[760px]">
             <thead>
               <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                 <th className="py-3.5 px-4 font-semibold">Employee</th>
@@ -273,11 +273,26 @@ export default function AdminAttendancePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
-                    Loading attendance records...
-                  </td>
-                </tr>
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={`att-skel-${i}`} className="animate-pulse">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="w-16 h-2 bg-slate-100 rounded skeleton-shimmer" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4"><div className="w-20 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-14 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-14 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-12 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-12 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="w-16 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4 text-right"><div className="w-16 h-4 bg-slate-200 rounded-full ml-auto skeleton-shimmer" /></td>
+                  </tr>
+                ))
               ) : overview?.records?.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">

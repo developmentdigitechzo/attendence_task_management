@@ -418,10 +418,10 @@ export default function CalendarView({ userRole }: CalendarViewProps) {
 
       {/* Super Admin Add Holiday Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden max-h-[92dvh] overflow-y-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-emerald-500/10 via-brand-500/5 to-transparent border-b border-slate-100 flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-emerald-500/10 via-brand-500/5 to-transparent border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-xs">
                   <PartyPopper className="w-4 h-4" />
@@ -441,7 +441,7 @@ export default function CalendarView({ userRole }: CalendarViewProps) {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleAddHolidaySubmit} className="p-6 space-y-4">
+            <form onSubmit={handleAddHolidaySubmit} className="p-4 sm:p-6 space-y-4">
               {modalError && (
                 <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />

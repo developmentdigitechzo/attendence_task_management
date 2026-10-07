@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, AlertCircle, CheckCircle2 } from "lucide-react";
+import { X, Send, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function EODUpdateModal({
   onClose,
@@ -53,8 +53,8 @@ export default function EODUpdateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 ease-out">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out max-h-[92dvh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div>
             <h3 className="font-bold text-base text-slate-900">End-of-Day Work Update</h3>
@@ -141,10 +141,19 @@ export default function EODUpdateModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-1.5 interactive-tap"
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>{submitting ? "Submitting..." : "Submit EOD Update"}</span>
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Submitting EOD...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Submit EOD Update</span>
+                </>
+              )}
             </button>
           </div>
         </form>

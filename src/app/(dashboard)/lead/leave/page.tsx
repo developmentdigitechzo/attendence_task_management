@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { formatDateDisplay } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/ToastProvider";
 
 export default function LeadLeavePage() {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -55,20 +56,31 @@ export default function LeadLeavePage() {
       notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
     });
     if (reviewNotes === null) return;
+
+    // Optimistic update
+    const previousLeaves = [...leaves];
+    setLeaves((prev) =>
+      prev.map((l) =>
+        l.id === leaveId
+          ? { ...l, status: isApprove ? "APPROVED" : "REJECTED", reviewNotes: reviewNotes || l.reviewNotes }
+          : l
+      )
+    );
+    toast.success(`Leave request ${action.toLowerCase()}d successfully.`);
+
     try {
       const res = await fetch("/api/leave", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-skip-toast": "1" },
         body: JSON.stringify({ leaveId, action, reviewNotes }),
       });
 
-      if (res.ok) {
-        setFeedback(`Leave request ${action.toLowerCase()}d successfully.`);
-        fetchLeaves();
-        setTimeout(() => setFeedback(null), 3000);
+      if (!res.ok) {
+        throw new Error("Failed to update status");
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setLeaves(previousLeaves);
+      toast.error("Could not update leave request. Reverted.");
     }
   };
 
@@ -158,8 +170,8 @@ export default function LeadLeavePage() {
           </h2>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[700px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <th className="py-3 px-4">Employee</th>
@@ -173,11 +185,25 @@ export default function LeadLeavePage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {loading ? (
-              <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-400">
-                  Loading leave records...
-                </td>
-              </tr>
+              [1, 2, 3, 4].map((i) => (
+                <tr key={`leave-skel-${i}`} className="animate-pulse">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" />
+                        <div className="w-16 h-2 bg-slate-100 rounded skeleton-shimmer" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4"><div className="w-14 h-4 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-10 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-28 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-14 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                  <td className="py-3 px-4 text-right"><div className="w-16 h-6 bg-slate-200 rounded-lg ml-auto skeleton-shimmer" /></td>
+                </tr>
+              ))
             ) : leaves.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-slate-400">

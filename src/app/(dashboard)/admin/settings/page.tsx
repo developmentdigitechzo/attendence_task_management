@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, Save, CheckCircle2, AlertCircle, Building2, Clock, Globe } from "lucide-react";
+import { Settings, Save, CheckCircle2, AlertCircle, Building2, Clock, Globe, Loader2 } from "lucide-react";
 import { formatTime12h } from "@/lib/utils";
+import { AntdCard, AntdFormItem, AntdInput, AntdSelect, AntdButton } from "@/components/ui/AntdUI";
 
 export default function AdminSettingsPage() {
   const [companyName, setCompanyName] = useState("Digitechzo");
@@ -81,118 +82,110 @@ export default function AdminSettingsPage() {
 
 
       <form onSubmit={handleSave} className="space-y-6">
-        {/* Branding Box */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 panel-hover">
-          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-brand-600" />
-            <span>Organization Branding</span>
-          </h2>
-
+        {/* Antd Branding Card */}
+        <AntdCard
+          title={
+            <span className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-brand-600" />
+              <span>Organization Branding</span>
+            </span>
+          }
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Company Display Name
-              </label>
-              <input
-                type="text"
+            <AntdFormItem label="Company Display Name" required>
+              <AntdInput
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
               />
-            </div>
+            </AntdFormItem>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Product Subtitle / Tagline
-              </label>
-              <input
-                type="text"
+            <AntdFormItem label="Product Subtitle / Tagline">
+              <AntdInput
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
               />
-            </div>
+            </AntdFormItem>
           </div>
-        </div>
+        </AntdCard>
 
-        {/* Working Hours & Grace Period Box */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 panel-hover">
-          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-brand-600" />
-            <span>Office Hours & Attendance Calculation Rules</span>
-          </h2>
-
+        {/* Antd Working Hours Card */}
+        <AntdCard
+          title={
+            <span className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-brand-600" />
+              <span>Office Hours & Attendance Calculation Rules</span>
+            </span>
+          }
+        >
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Office Start Time
-                </label>
-                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
-                  {formatTime12h(workStartTime)}
+            <AntdFormItem
+              label={
+                <span className="flex items-center justify-between w-full">
+                  <span>Office Start Time</span>
+                  <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                    {formatTime12h(workStartTime)}
+                  </span>
                 </span>
-              </div>
-              <input
+              }
+            >
+              <AntdInput
                 type="time"
                 value={workStartTime}
                 onChange={(e) => setWorkStartTime(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none font-mono"
+                className="font-mono"
               />
-            </div>
+            </AntdFormItem>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Office End Time
-                </label>
-                <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
-                  {formatTime12h(workEndTime)}
+            <AntdFormItem
+              label={
+                <span className="flex items-center justify-between w-full">
+                  <span>Office End Time</span>
+                  <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">
+                    {formatTime12h(workEndTime)}
+                  </span>
                 </span>
-              </div>
-              <input
+              }
+            >
+              <AntdInput
                 type="time"
                 value={workEndTime}
                 onChange={(e) => setWorkEndTime(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none font-mono"
+                className="font-mono"
               />
-            </div>
+            </AntdFormItem>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Grace Period (Minutes)
-              </label>
-              <input
+            <AntdFormItem
+              label="Grace Period (Minutes)"
+              help={`Arrival after ${formatTime12h(workStartTime)} + ${gracePeriodMinutes}m is flagged as Late.`}
+            >
+              <AntdInput
                 type="number"
                 min="0"
                 max="60"
                 value={gracePeriodMinutes}
                 onChange={(e) => setGracePeriodMinutes(parseInt(e.target.value, 10) || 0)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none font-mono"
+                className="font-mono"
               />
-              <p className="text-[10px] text-slate-400 mt-1">
-                Arrival after {formatTime12h(workStartTime)} + {gracePeriodMinutes}m is flagged as Late.
-              </p>
-            </div>
+            </AntdFormItem>
           </div>
-        </div>
+        </AntdCard>
 
-        {/* Timezone & Localization */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 panel-hover">
-          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-brand-600" />
-            <span>Timezone & Regional Configuration</span>
-          </h2>
-
+        {/* Antd Timezone & Regional Card */}
+        <AntdCard
+          title={
+            <span className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-brand-600" />
+              <span>Timezone & Regional Configuration</span>
+            </span>
+          }
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Default Timezone
-              </label>
-              <select
+            <AntdFormItem label="Default Timezone">
+              <AntdSelect
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none font-mono font-medium"
+                className="font-mono font-medium"
               >
                 <option value="Asia/Kolkata">Asia/Kolkata (IST - UTC+05:30)</option>
                 <option value="UTC">UTC (Coordinated Universal Time)</option>
@@ -200,34 +193,31 @@ export default function AdminSettingsPage() {
                 <option value="Europe/London">Europe/London (GMT/BST)</option>
                 <option value="Asia/Dubai">Asia/Dubai (GST - UTC+04:00)</option>
                 <option value="Asia/Singapore">Asia/Singapore (SGT - UTC+08:00)</option>
-              </select>
-            </div>
+              </AntdSelect>
+            </AntdFormItem>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Working Days (1=Mon ... 6=Sat, 7=Sun)
-              </label>
-              <input
-                type="text"
+            <AntdFormItem
+              label="Working Days (1=Mon ... 6=Sat, 7=Sun)"
+              help="Comma-separated active working days of the week"
+            >
+              <AntdInput
                 value={workingDays}
                 onChange={(e) => setWorkingDays(e.target.value)}
                 placeholder="1,2,3,4,5,6"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white outline-none font-mono"
+                className="font-mono"
               />
-              <p className="text-[10px] text-slate-400 mt-1">Comma-separated active working days of the week</p>
-            </div>
+            </AntdFormItem>
           </div>
-        </div>
+        </AntdCard>
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-2"
+          <AntdButton
+            type="primary"
+            loading={saving}
+            icon={<Save className="w-4 h-4" />}
           >
-            <Save className="w-4 h-4" />
-            <span>{saving ? "Saving Changes..." : "Save Company Settings"}</span>
-          </button>
+            Save Company Settings
+          </AntdButton>
         </div>
       </form>
     </div>

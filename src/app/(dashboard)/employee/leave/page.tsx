@@ -10,6 +10,7 @@ import {
   X,
   Trash2,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { getTodayDateString, formatDateDisplay } from "@/lib/utils";
 import { confirmAction } from "@/components/ui/ConfirmDialog";
@@ -224,8 +225,8 @@ export default function EmployeeLeavePage() {
           <span className="text-xs text-slate-400 font-medium">{leaves.length} records</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[700px]">
             <thead>
               <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                 <th className="py-3 px-4 font-semibold">Type</th>
@@ -239,11 +240,17 @@ export default function EmployeeLeavePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading your leave history...
-                  </td>
-                </tr>
+                [...Array(4)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="py-3.5 px-4"><div className="h-4 w-16 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3.5 w-32 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3.5 w-12 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3.5 w-40 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3.5 w-24 bg-slate-100 rounded skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4"><div className="h-4 w-16 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                    <td className="py-3.5 px-4 text-right"><div className="h-4 w-8 bg-slate-200 rounded skeleton-shimmer ml-auto" /></td>
+                  </tr>
+                ))
               ) : leaves.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
@@ -307,8 +314,8 @@ export default function EmployeeLeavePage() {
 
       {/* Apply Leave Modal */}
       {isApplyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 sm:slide-in-from-bottom-0 duration-200 ease-out max-h-[92dvh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div>
                 <h3 className="font-bold text-base text-slate-900">Apply for Leave</h3>
@@ -431,9 +438,16 @@ export default function EmployeeLeavePage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-sm disabled:opacity-50 transition cursor-pointer"
+                  className="px-5 py-2 text-xs font-semibold bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl shadow-sm disabled:opacity-50 transition cursor-pointer flex items-center gap-2"
                 >
-                  {submitting ? "Submitting..." : "Submit Application"}
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    "Submit Application"
+                  )}
                 </button>
               </div>
             </form>

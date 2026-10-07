@@ -159,9 +159,9 @@ export default function AdminReportsPage() {
         </div>
 
         {/* Date / Month Selectors */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
           {reportType === "weekly" ? (
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="text-slate-500 font-medium">From:</span>
               <input
                 type="date"
@@ -193,7 +193,7 @@ export default function AdminReportsPage() {
           <select
             value={departmentId}
             onChange={(e) => setDepartmentId(e.target.value)}
-            className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none"
+            className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none flex-1 sm:flex-initial"
           >
             <option value="ALL">All Departments</option>
             {departments.map((d) => (
@@ -218,8 +218,8 @@ export default function AdminReportsPage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[780px]">
             <thead>
               <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                 <th className="py-3.5 px-4 font-semibold">Employee</th>

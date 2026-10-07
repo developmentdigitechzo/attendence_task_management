@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   FileEdit,
   Flame,
+  Loader2,
 } from "lucide-react";
 import { formatMinutes, formatTimeIST } from "@/lib/utils";
 import CorrectionModal from "./CorrectionModal";
@@ -146,6 +147,15 @@ export default function AttendanceWidget({
   };
 
   const handleBreak = async (action: "start" | "end") => {
+    const previousBreak = activeBreak;
+    // Optimistic UI state update
+    if (action === "start") {
+      setActiveBreak({ id: "temp-break", startTime: new Date().toISOString(), endTime: null });
+      setBreakSeconds(0);
+    } else {
+      setActiveBreak(null);
+    }
+
     setActionLoading(true);
     setMessage(null);
     try {
@@ -156,6 +166,8 @@ export default function AttendanceWidget({
       });
       const data = await res.json();
       if (!res.ok) {
+        // Rollback optimistic state
+        setActiveBreak(previousBreak);
         setMessage({ text: data.error || "Failed to process break.", type: "error" });
       } else {
         setMessage({ text: data.message, type: "success" });
@@ -163,6 +175,7 @@ export default function AttendanceWidget({
         onStatusChange?.();
       }
     } catch {
+      setActiveBreak(previousBreak);
       setMessage({ text: "Network error.", type: "error" });
     } finally {
       setActionLoading(false);
@@ -181,9 +194,9 @@ export default function AttendanceWidget({
   const isOnBreak = Boolean(activeBreak);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
+    <div className="bg-white rounded-lg border border-[#f0f0f0] p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
       {/* Header Greeting */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#f0f0f0]">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">
             Good Morning, {userName}! 👋
@@ -277,12 +290,12 @@ export default function AttendanceWidget({
       </div>
 
       {/* Primary Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
         {!isCheckedIn ? (
           <button
             onClick={() => setIsCheckInModalOpen(true)}
             disabled={actionLoading}
-            className="flex-1 min-w-[200px] h-12 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition disabled:opacity-50"
+            className="w-full sm:w-auto sm:flex-1 min-w-0 sm:min-w-[180px] h-12 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-white" />
             <span>CHECK IN</span>
@@ -292,29 +305,56 @@ export default function AttendanceWidget({
             <button
               onClick={handleCheckOut}
               disabled={actionLoading}
-              className="flex-1 min-w-[160px] h-12 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-rose-600/20 transition disabled:opacity-50"
+              className="w-full sm:w-auto sm:flex-1 min-w-0 sm:min-w-[140px] h-12 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-rose-600/20 transition disabled:opacity-50 interactive-tap"
             >
-              <Square className="w-4 h-4 fill-white" />
-              <span>CHECK OUT</span>
+              {actionLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>PUNCHING OUT...</span>
+                </>
+              ) : (
+                <>
+                  <Square className="w-4 h-4 fill-white" />
+                  <span>CHECK OUT</span>
+                </>
+              )}
             </button>
 
             {!isOnBreak ? (
               <button
                 onClick={() => handleBreak("start")}
                 disabled={actionLoading}
-                className="flex-1 min-w-[160px] h-12 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition disabled:opacity-50"
+                className="w-full sm:w-auto sm:flex-1 min-w-0 sm:min-w-[140px] h-12 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 transition disabled:opacity-50 interactive-tap"
               >
-                <Coffee className="w-4 h-4" />
-                <span>START BREAK</span>
+                {actionLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>STARTING...</span>
+                  </>
+                ) : (
+                  <>
+                    <Coffee className="w-4 h-4" />
+                    <span>START BREAK</span>
+                  </>
+                )}
               </button>
             ) : (
               <button
                 onClick={() => handleBreak("end")}
                 disabled={actionLoading}
-                className="flex-1 min-w-[160px] h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+                className="w-full sm:w-auto sm:flex-1 min-w-0 sm:min-w-[140px] h-12 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition disabled:opacity-50 interactive-tap"
               >
-                <Play className="w-4 h-4 fill-white" />
-                <span>END BREAK</span>
+                {actionLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>RESUMING...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-white" />
+                    <span>END BREAK</span>
+                  </>
+                )}
               </button>
             )}
           </>
@@ -327,7 +367,7 @@ export default function AttendanceWidget({
         {/* Correction link */}
         <button
           onClick={() => setIsCorrectionModalOpen(true)}
-          className="px-4 h-12 text-xs font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition flex items-center gap-1.5"
+          className="w-full sm:w-auto px-4 h-12 text-xs font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition flex items-center justify-center gap-1.5"
         >
           <FileEdit className="w-3.5 h-3.5" />
           <span>Attendance Correction</span>

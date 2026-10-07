@@ -225,7 +225,7 @@ export default function TasksView({
       </div>
 
       {/* Factual Productivity Metrics Bar (Section 17) */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-xs card-hover">
           <p className="text-[11px] font-medium text-slate-400 uppercase">Completion Rate</p>
           <p className="text-xl font-bold text-slate-900 mt-1">{completionRate}%</p>
@@ -348,7 +348,7 @@ export default function TasksView({
 
       {/* Main Task Display: Kanban vs Table */}
       {viewMode === "kanban" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start">
+        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory 2xl:grid 2xl:grid-cols-5 2xl:overflow-visible items-start">
           {kanbanColumns.map((col) => {
             const colTasks = displayTasks.filter((t) => t.status === col.id);
             return (
@@ -361,7 +361,7 @@ export default function TasksView({
                   if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverCol(null);
                 }}
                 onDrop={(e) => handleDrop(e, col.id)}
-                className={`rounded-2xl p-3 border min-h-[400px] flex flex-col transition-colors ${
+                className={`w-[280px] sm:w-[300px] 2xl:w-auto shrink-0 2xl:shrink snap-start rounded-2xl p-3 border min-h-[400px] flex flex-col transition-colors ${
                   dragOverCol === col.id && draggingId
                     ? "bg-brand-50 border-brand-400 border-dashed ring-2 ring-brand-200"
                     : "bg-slate-100/70 border-slate-200/60"
@@ -377,7 +377,32 @@ export default function TasksView({
                 </div>
 
                 <div className="space-y-2.5 flex-1 overflow-y-auto">
-                  {colTasks.length === 0 ? (
+                  {loading ? (
+                    <div className="space-y-2.5">
+                      <div className="bg-white/80 p-3 rounded-xl border border-slate-200/60 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div className="h-3.5 w-14 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="h-3.5 w-10 bg-slate-200 rounded skeleton-shimmer" />
+                        </div>
+                        <div className="h-4 w-3/4 bg-slate-200 rounded skeleton-shimmer" />
+                        <div className="h-3 w-1/2 bg-slate-100 rounded skeleton-shimmer" />
+                        <div className="flex justify-between pt-1 border-t border-slate-100">
+                          <div className="h-3 w-16 bg-slate-100 rounded skeleton-shimmer" />
+                          <div className="h-3 w-12 bg-slate-100 rounded skeleton-shimmer" />
+                        </div>
+                      </div>
+                      <div className="bg-white/60 p-3 rounded-xl border border-slate-200/50 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div className="h-3.5 w-12 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="h-3.5 w-8 bg-slate-200 rounded skeleton-shimmer" />
+                        </div>
+                        <div className="h-4 w-5/6 bg-slate-200 rounded skeleton-shimmer" />
+                        <div className="flex justify-between pt-1 border-t border-slate-100">
+                          <div className="h-3 w-14 bg-slate-100 rounded skeleton-shimmer" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : colTasks.length === 0 ? (
                     <div className="py-8 text-center text-[11px] text-slate-400 italic">
                       {draggingId ? "Drop here" : "Empty column"}
                     </div>
@@ -441,8 +466,8 @@ export default function TasksView({
       ) : (
         /* Table View */
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto pb-1">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[600px]">
               <thead>
                 <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4 font-semibold">ID & Title</th>
@@ -454,7 +479,23 @@ export default function TasksView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {displayTasks.length === 0 ? (
+                {loading ? (
+                  [...Array(5)].map((_, i) => (
+                    <tr key={i}>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3.5 w-12 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="h-3.5 w-44 bg-slate-200 rounded skeleton-shimmer" />
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4"><div className="h-3.5 w-24 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3.5 px-4"><div className="h-3.5 w-24 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3.5 px-4"><div className="h-4 w-16 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3.5 px-4"><div className="h-3.5 w-20 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3.5 px-4 text-right"><div className="h-5 w-16 bg-slate-200 rounded-full skeleton-shimmer ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : displayTasks.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-400">
                       No tasks found.

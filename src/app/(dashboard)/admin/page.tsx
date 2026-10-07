@@ -19,6 +19,7 @@ import {
 import { formatTimeIST, formatMinutes, getTodayDateString } from "@/lib/utils";
 import TaskCreateModal from "@/components/tasks/TaskCreateModal";
 import EmployeeModal from "@/components/employees/EmployeeModal";
+import { AntdButton } from "@/components/ui/AntdUI";
 
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -95,28 +96,30 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          <button
+          <AntdButton
+            type="default"
+            icon={<CheckSquare className="w-3.5 h-3.5 text-brand-600" />}
             onClick={() => setIsTaskModalOpen(true)}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 shadow-xs transition flex items-center gap-1.5"
+            className="!h-9"
           >
-            <CheckSquare className="w-3.5 h-3.5 text-brand-600" />
-            <span>Assign Task</span>
-          </button>
+            Assign Task
+          </AntdButton>
 
-          <button
+          <AntdButton
+            type="primary"
+            icon={<UserPlus className="w-3.5 h-3.5" />}
             onClick={() => setIsEmployeeModalOpen(true)}
-            className="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5"
+            className="!h-9"
           >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>Onboard Employee</span>
-          </button>
+            Onboard Employee
+          </AntdButton>
         </div>
       </div>
 
-      {/* Primary KPI Metric Cards (Section 25) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+      {/* Primary KPI Metric Cards (Antd Card style) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-3.5">
         {/* Total Active */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[11px] font-medium uppercase tracking-wider">Team</span>
             <Users className="w-4 h-4 text-slate-500" />
@@ -126,7 +129,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Present Today */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-emerald-600">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Present</span>
             <CheckCircle2 className="w-4 h-4" />
@@ -140,7 +143,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Currently Working */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-brand-600">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Working</span>
             <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>
@@ -150,7 +153,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Late Today */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-amber-600">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Late</span>
             <Clock className="w-4 h-4" />
@@ -160,7 +163,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Pending Tasks */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[11px] font-medium uppercase tracking-wider">Tasks</span>
             <CheckSquare className="w-4 h-4 text-slate-500" />
@@ -170,7 +173,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Overdue Tasks */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-rose-600">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Overdue</span>
             <AlertTriangle className="w-4 h-4" />
@@ -180,7 +183,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Pending Leaves */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
+        <div className="bg-white p-4 rounded-lg border border-[#f0f0f0] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
           <div className="flex items-center justify-between text-ink-600">
             <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Leave</span>
             <CalendarDays className="w-4 h-4" />
@@ -193,10 +196,10 @@ export default function AdminDashboardPage() {
       {/* Main Grid: Today's Live Attendance Table & Tasks Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Live Attendance Table (2 Columns wide) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs panel-hover">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-[#f0f0f0] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#f0f0f0]">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
                 <span>Today's Live Attendance</span>
                 <span className="text-[11px] font-normal text-slate-400 font-mono">
                   ({getTodayDateString()})
@@ -213,8 +216,8 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="mt-4 overflow-x-auto pb-1">
+            <table className="w-full text-left text-xs whitespace-nowrap min-w-[540px]">
               <thead>
                 <tr className="text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                   <th className="pb-3 font-semibold">Employee</th>
@@ -227,11 +230,24 @@ export default function AdminDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
-                      Loading live attendance data...
-                    </td>
-                  </tr>
+                  [1, 2, 3, 4, 5].map((i) => (
+                    <tr key={`admin-live-skel-${i}`} className="animate-pulse">
+                      <td className="py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" />
+                            <div className="w-16 h-2 bg-slate-100 rounded skeleton-shimmer" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3"><div className="w-16 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3"><div className="w-12 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3"><div className="w-12 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                      <td className="py-3"><div className="w-14 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                      <td className="py-3 text-right"><div className="w-14 h-4 bg-slate-200 rounded-full ml-auto skeleton-shimmer" /></td>
+                    </tr>
+                  ))
                 ) : overview?.records?.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
@@ -301,9 +317,9 @@ export default function AdminDashboardPage() {
         {/* Right Sidebar: Task Overview & Recent Activity */}
         <div className="space-y-6">
           {/* Task Status Overview */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs panel-hover">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h2 className="text-sm font-bold text-slate-900">Task Overview</h2>
+          <div className="bg-white rounded-lg border border-[#f0f0f0] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
+            <div className="flex items-center justify-between pb-3 border-b border-[#f0f0f0] mb-4">
+              <h2 className="text-sm font-semibold text-slate-800">Task Overview</h2>
               <Link
                 href="/admin/tasks"
                 className="text-xs font-semibold text-brand-600 hover:text-brand-800"
@@ -313,31 +329,31 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center justify-between p-2 rounded-md bg-slate-50 border border-slate-100">
                 <span className="text-slate-600 font-medium">To Do</span>
                 <span className="font-bold text-slate-800">
                   {tasks.filter((t) => t.status === "TODO").length}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-brand-50/50 border border-brand-100/50">
+              <div className="flex items-center justify-between p-2 rounded-md bg-brand-50/50 border border-brand-100/50">
                 <span className="text-brand-800 font-medium">In Progress</span>
                 <span className="font-bold text-brand-800">
                   {tasks.filter((t) => t.status === "IN_PROGRESS").length}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50/50 border border-amber-100/50">
+              <div className="flex items-center justify-between p-2 rounded-md bg-amber-50/50 border border-amber-100/50">
                 <span className="text-amber-800 font-medium">In Review</span>
                 <span className="font-bold text-amber-800">
                   {tasks.filter((t) => t.status === "REVIEW").length}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50/50 border border-emerald-100/50">
+              <div className="flex items-center justify-between p-2 rounded-md bg-emerald-50/50 border border-emerald-100/50">
                 <span className="text-emerald-800 font-medium">Completed</span>
                 <span className="font-bold text-emerald-800">
                   {tasks.filter((t) => t.status === "COMPLETED").length}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-rose-50/50 border border-rose-100/50">
+              <div className="flex items-center justify-between p-2 rounded-md bg-rose-50/50 border border-rose-100/50">
                 <span className="text-rose-800 font-medium">Blocked</span>
                 <span className="font-bold text-rose-800">
                   {tasks.filter((t) => t.status === "BLOCKED").length}
@@ -347,9 +363,9 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Audit Stream / Recent Operational Activity */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs panel-hover">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-              <h2 className="text-sm font-bold text-slate-900">Recent Operations</h2>
+          <div className="bg-white rounded-lg border border-[#f0f0f0] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all">
+            <div className="flex items-center justify-between pb-3 border-b border-[#f0f0f0] mb-3">
+              <h2 className="text-sm font-semibold text-slate-800">Recent Operations</h2>
               <Link
                 href="/admin/audit"
                 className="text-xs font-semibold text-brand-600 hover:text-brand-800"

@@ -17,6 +17,7 @@ import {
 import { formatTimeIST, formatMinutes, getTodayDateString, formatDateDisplay, formatTime12h } from "@/lib/utils";
 import { promptAction } from "@/components/ui/ConfirmDialog";
 import AttendanceWidget from "@/components/attendance/AttendanceWidget";
+import { toast } from "@/components/ui/ToastProvider";
 
 export default function LeadAttendancePage() {
   const [workload, setWorkload] = useState<any[]>([]);
@@ -68,20 +69,29 @@ export default function LeadAttendancePage() {
       notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
     });
     if (reviewNotes === null) return;
+
+    // Optimistic update
+    const previousCorrections = [...corrections];
+    setCorrections((prev) =>
+      prev.map((c) =>
+        c.id === correctionId ? { ...c, status: isApprove ? "APPROVED" : "REJECTED" } : c
+      )
+    );
+    toast.success(`Correction request ${action.toLowerCase()}d successfully.`);
+
     try {
       const res = await fetch("/api/attendance/corrections", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-skip-toast": "1" },
         body: JSON.stringify({ correctionId, action, reviewNotes }),
       });
 
-      if (res.ok) {
-        setFeedback(`Correction request ${action.toLowerCase()}d successfully.`);
-        fetchAttendanceData();
-        setTimeout(() => setFeedback(null), 3000);
+      if (!res.ok) {
+        throw new Error("Failed to review correction");
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setCorrections(previousCorrections);
+      toast.error("Could not update correction request. Reverted.");
     }
   };
 
@@ -112,7 +122,7 @@ export default function LeadAttendancePage() {
         </div>
 
         {/* Live Attendance Counters */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>{workingCount} Working</span>
@@ -180,8 +190,8 @@ export default function LeadAttendancePage() {
       {/* TAB 1: LIVE ATTENDANCE ROSTER */}
       {activeTab === "LIVE" && (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto pb-1">
+            <table className="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[640px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                 <th className="py-3 px-4">Employee</th>
@@ -194,11 +204,24 @@ export default function LeadAttendancePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Loading attendance...
-                  </td>
-                </tr>
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={`lead-att-skel-${i}`} className="animate-pulse">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-200 skeleton-shimmer shrink-0" />
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" />
+                          <div className="w-16 h-2 bg-slate-100 rounded skeleton-shimmer" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4"><div className="w-16 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3 px-4"><div className="w-20 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                    <td className="py-3 px-4"><div className="w-14 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3 px-4"><div className="w-14 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                    <td className="py-3 px-4"><div className="w-16 h-4 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  </tr>
+                ))
               ) : workload.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
@@ -310,8 +333,8 @@ export default function LeadAttendancePage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden panel-hover">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+            <div className="overflow-x-auto pb-1">
+              <table className="w-full text-left border-collapse text-xs whitespace-nowrap min-w-[750px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4">Employee</th>

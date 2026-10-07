@@ -310,7 +310,7 @@ export default function ChatPage() {
   const activeContact = directContacts.find((u) => u.id === activeRecipientId);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs flex h-[calc(100vh-7rem)] overflow-hidden panel-hover">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs flex h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-6.5rem)] md:h-[calc(100dvh-7.5rem)] overflow-hidden panel-hover">
       {/* Left Chat Sidebar (Channels & DMs) */}
       <div
         className={`w-full md:w-72 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shrink-0 ${
@@ -458,7 +458,7 @@ export default function ChatPage() {
                     <h3 className="font-bold text-sm text-slate-900 truncate">
                       #{activeChannel.name}
                     </h3>
-                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 hidden xs:inline-block">
                       {messages.length} {messages.length === 1 ? "message" : "messages"}
                     </span>
                   </div>
@@ -477,7 +477,7 @@ export default function ChatPage() {
                     <h3 className="font-bold text-sm text-slate-900 truncate">
                       {activeContact.name}
                     </h3>
-                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 hidden xs:inline-block">
                       {messages.length} {messages.length === 1 ? "message" : "messages"}
                     </span>
                   </div>
@@ -492,8 +492,8 @@ export default function ChatPage() {
           </div>
 
           {/* Search within this conversation & Backup Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative w-28 sm:w-56 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div className="relative w-20 xs:w-32 sm:w-56 shrink-0">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"

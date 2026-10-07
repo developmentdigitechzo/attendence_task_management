@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { CheckCircle2, AlertCircle, Info, Bell, X } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, Bell, X, Loader2 } from "lucide-react";
 
 export type ToastType = "success" | "error" | "info" | "notification";
 
@@ -49,11 +49,59 @@ export const toast = {
 const ToastContext = createContext(toast);
 export const useToast = () => useContext(ToastContext);
 
+export const MUTATION_EVENT = "app:mutation";
+
+export function useIsMutating(): boolean {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const delta = (e as CustomEvent).detail?.delta || 0;
+      setCount((prev) => Math.max(0, prev + delta));
+    };
+    window.addEventListener(MUTATION_EVENT, handler);
+    return () => window.removeEventListener(MUTATION_EVENT, handler);
+  }, []);
+  return count > 0;
+}
+
+export const globalLoading = {
+  start: () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(MUTATION_EVENT, { detail: { delta: 1 } }));
+    }
+  },
+  stop: () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(MUTATION_EVENT, { detail: { delta: -1 } }));
+    }
+  },
+};
+
 const STYLES: Record<ToastType, { bg: string; box: string; icon: string; Icon: any }> = {
-  success: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: CheckCircle2 },
-  error: { bg: "bg-rose-700", box: "border-rose-500/50", icon: "text-white bg-white/20 border border-white/20", Icon: AlertCircle },
-  info: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: Info },
-  notification: { bg: "bg-brand-600", box: "border-brand-400/50", icon: "text-white bg-white/20 border border-white/20", Icon: Bell },
+  success: {
+    bg: "bg-emerald-700/95 backdrop-blur-md",
+    box: "border-emerald-500/40 shadow-emerald-950/25",
+    icon: "text-emerald-100 bg-white/15 border border-white/20",
+    Icon: CheckCircle2,
+  },
+  error: {
+    bg: "bg-rose-700/95 backdrop-blur-md",
+    box: "border-rose-500/40 shadow-rose-950/25",
+    icon: "text-rose-100 bg-white/15 border border-white/20",
+    Icon: AlertCircle,
+  },
+  info: {
+    bg: "bg-slate-900/95 backdrop-blur-md",
+    box: "border-slate-700/50 shadow-black/35",
+    icon: "text-brand-300 bg-brand-500/20 border border-brand-500/30",
+    Icon: Info,
+  },
+  notification: {
+    bg: "bg-brand-700/95 backdrop-blur-md",
+    box: "border-brand-500/40 shadow-brand-950/25",
+    icon: "text-brand-100 bg-white/15 border border-white/20",
+    Icon: Bell,
+  },
 };
 
 // Requests that should never raise automatic toasts (polling / high-frequency / silent)
@@ -128,6 +176,14 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
         !path.startsWith("/api/") ||
         SILENT_PATHS.some((p) => path.startsWith(p));
       const mutating = method !== "GET" && method !== "HEAD";
+      const isActionMutation =
+        mutating &&
+        path.startsWith("/api/") &&
+        !SILENT_PATHS.some((p) => path.startsWith(p));
+
+      if (isActionMutation) {
+        window.dispatchEvent(new CustomEvent(MUTATION_EVENT, { detail: { delta: 1 } }));
+      }
 
       let res: Response;
       try {
@@ -135,6 +191,10 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
       } catch (err) {
         if (!skip) toast.error("Network error. Please check your connection and try again.");
         throw err;
+      } finally {
+        if (isActionMutation) {
+          window.dispatchEvent(new CustomEvent(MUTATION_EVENT, { detail: { delta: -1 } }));
+        }
       }
 
       if (!skip) {
@@ -184,7 +244,7 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
             <div
               key={t.id}
               role={t.type === "error" ? "alert" : "status"}
-              className={`pointer-events-auto flex items-start gap-3 ${s.bg} text-white border ${s.box} rounded-xl shadow-2xl shadow-black/40 p-3.5 animate-in fade-in slide-in-from-bottom-2 duration-200`}
+              className={`pointer-events-auto flex items-start gap-3 ${s.bg} text-white border ${s.box} rounded-2xl shadow-2xl shadow-black/40 p-3.5 animate-in fade-in slide-in-from-bottom-3 duration-200 ease-out`}
             >
               {t.href ? (
                 <a href={t.href} onClick={() => dismiss(t.id)} className="flex items-start gap-3 flex-1 min-w-0 text-white">

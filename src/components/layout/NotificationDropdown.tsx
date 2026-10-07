@@ -90,7 +90,7 @@ export default function NotificationDropdown({
         aria-hidden="true"
       />
 
-      <div className="fixed inset-x-3 top-[68px] sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-[26rem] max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-3 z-50 animate-in fade-in zoom-in-95 duration-100">
+      <div className="fixed inset-x-3 top-[68px] sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-[26rem] max-w-[calc(100vw-24px)] bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200 py-3 z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150 ease-out origin-top-right">
         <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-[15px] text-slate-900">Notifications</h3>

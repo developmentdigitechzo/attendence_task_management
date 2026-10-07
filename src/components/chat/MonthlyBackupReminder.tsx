@@ -68,12 +68,12 @@ export function MonthlyBackupHeaderActions() {
   };
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
+    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
       <button
         type="button"
         onClick={handleDownload}
         disabled={isDownloading}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-700 border border-slate-200 hover:border-brand-300 rounded-xl text-xs font-semibold transition"
+        className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-slate-100 hover:bg-brand-50 text-slate-700 hover:text-brand-700 border border-slate-200 hover:border-brand-300 rounded-xl text-xs font-semibold transition"
         title="Backup & export complete chat history as JSON before the 100-day cutoff"
       >
         {isDownloading ? (
@@ -87,7 +87,7 @@ export function MonthlyBackupHeaderActions() {
       <button
         type="button"
         onClick={handleSimulate}
-        className="inline-flex items-center gap-1 px-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-[11px] font-medium transition"
+        className="hidden sm:inline-flex items-center gap-1 px-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-[11px] font-medium transition"
         title="Simulate 30th day monthly backup reminder toast and alert banner"
       >
         <Calendar className="w-3 h-3 text-amber-600" />

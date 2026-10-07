@@ -192,7 +192,7 @@ export default function TeamLeadDashboardPage() {
       />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-3.5">
         <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs card-hover">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[11px] font-medium uppercase tracking-wider">My Team</span>
@@ -253,7 +253,7 @@ export default function TeamLeadDashboardPage() {
         {/* Left (2 Cols): Team Capacity & Workload Balance (NiftyPM) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs panel-hover">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
               <div>
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-brand-600" />
@@ -263,7 +263,7 @@ export default function TeamLeadDashboardPage() {
                   Track who is free, who is balanced, and who has too many active deliverables
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => {
                     setPreselectedAssignee("");
@@ -397,7 +397,7 @@ export default function TeamLeadDashboardPage() {
 
           {/* Daily Standups / Team EOD Stream */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs panel-hover">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-brand-600" />
@@ -409,7 +409,7 @@ export default function TeamLeadDashboardPage() {
               </div>
               <Link
                 href="/lead/standup"
-                className="text-xs font-semibold text-brand-600 hover:text-brand-800"
+                className="text-xs font-semibold text-brand-600 hover:text-brand-800 shrink-0 self-start sm:self-auto"
               >
                 View all standups
               </Link>

@@ -14,6 +14,9 @@ import {
   Crown,
   Briefcase,
   Users,
+  Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export type PortalType = "admin" | "lead" | "employee" | "general";
@@ -163,12 +166,15 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
   // Sign In states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Sign Up states (allowed on employee & general portals)
   const [name, setName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState(config.defaultRole);
 
   const [loading, setLoading] = useState(false);
@@ -256,7 +262,7 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-950 flex flex-col justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Graphic Image */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <Image
@@ -275,57 +281,65 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-[1]">
         {/* Background Animated Ambient Glowing Orbs / Halos */}
         <div
-          className={`absolute -top-32 -right-32 w-[480px] h-[480px] ${sphereTheme.ambient1} rounded-full blur-3xl animate-ball-1`}
+          className={`absolute -top-32 -right-32 w-[340px] sm:w-[480px] h-[340px] sm:h-[480px] ${sphereTheme.ambient1} rounded-full blur-3xl animate-ball-1`}
         />
         <div
-          className={`absolute -bottom-32 -left-32 w-[520px] h-[520px] ${sphereTheme.ambient2} rounded-full blur-3xl animate-ball-2`}
+          className={`absolute -bottom-32 -left-32 w-[360px] sm:w-[520px] h-[360px] sm:h-[520px] ${sphereTheme.ambient2} rounded-full blur-3xl animate-ball-2`}
         />
         <div
-          className="absolute top-1/3 -left-28 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl animate-ball-3"
+          className="absolute top-1/3 -left-28 w-56 sm:w-72 h-56 sm:h-72 bg-brand-500/10 rounded-full blur-3xl animate-ball-3"
         />
         <div
-          className="absolute bottom-1/3 -right-28 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-ball-4"
+          className="absolute bottom-1/3 -right-28 w-60 sm:w-80 h-60 sm:h-80 bg-emerald-500/10 rounded-full blur-3xl animate-ball-4"
         />
 
-        {/* LEFT SIDE 3D FLOATING BALLS */}
+        {/* LEFT SIDE 3D FLOATING BALLS (Optimized for mobile & tablet) */}
+        <div className="hidden sm:block">
+          <FloatingBall
+            style={{ top: "12%", left: "7%" }}
+            sizeClass="w-20 h-20 lg:w-28 lg:h-28"
+            themeClass={sphereTheme.ball1}
+            animClass="animate-ball-1"
+          />
+        </div>
         <FloatingBall
-          style={{ top: "12%", left: "7%" }}
-          sizeClass="w-24 h-24 sm:w-28 sm:h-28"
-          themeClass={sphereTheme.ball1}
-          animClass="animate-ball-1"
-        />
-        <FloatingBall
-          style={{ top: "48%", left: "5%" }}
-          sizeClass="w-16 h-16 sm:w-20 sm:h-20"
+          style={{ top: "48%", left: "4%" }}
+          sizeClass="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20"
           themeClass={sphereTheme.ball2}
           animClass="animate-ball-3"
         />
-        <FloatingBall
-          style={{ bottom: "12%", left: "10%" }}
-          sizeClass="w-12 h-12 sm:w-14 sm:h-14"
-          themeClass={sphereTheme.ball3}
-          animClass="animate-ball-4"
-        />
+        <div className="hidden sm:block">
+          <FloatingBall
+            style={{ bottom: "12%", left: "10%" }}
+            sizeClass="w-12 h-12 lg:w-14 lg:h-14"
+            themeClass={sphereTheme.ball3}
+            animClass="animate-ball-4"
+          />
+        </div>
 
-        {/* RIGHT SIDE 3D FLOATING BALLS */}
+        {/* RIGHT SIDE 3D FLOATING BALLS (Optimized for mobile & tablet) */}
+        <div className="hidden sm:block">
+          <FloatingBall
+            style={{ top: "14%", right: "7%" }}
+            sizeClass="w-20 h-20 lg:w-28 lg:h-28"
+            themeClass={sphereTheme.ball2}
+            animClass="animate-ball-2"
+          />
+        </div>
         <FloatingBall
-          style={{ top: "14%", right: "7%" }}
-          sizeClass="w-24 h-24 sm:w-28 sm:h-28"
-          themeClass={sphereTheme.ball2}
-          animClass="animate-ball-2"
-        />
-        <FloatingBall
-          style={{ top: "50%", right: "5%" }}
-          sizeClass="w-16 h-16 sm:w-20 sm:h-20"
+          style={{ top: "50%", right: "4%" }}
+          sizeClass="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20"
           themeClass={sphereTheme.ball1}
           animClass="animate-ball-5"
         />
-        <FloatingBall
-          style={{ bottom: "14%", right: "10%" }}
-          sizeClass="w-12 h-12 sm:w-14 sm:h-14"
-          themeClass={sphereTheme.ball3}
-          animClass="animate-ball-1"
-        />
+        <div className="hidden sm:block">
+          <FloatingBall
+            style={{ bottom: "14%", right: "10%" }}
+            sizeClass="w-12 h-12 lg:w-14 lg:h-14"
+            themeClass={sphereTheme.ball3}
+            animClass="animate-ball-1"
+          />
+        </div>
 
         {/* Decorative Wave lines */}
         <svg
@@ -462,24 +476,55 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
+                    className="w-full pl-9 pr-10 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-0.5 rounded cursor-pointer"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full h-10 ${config.btnColor} text-white rounded-xl text-xs font-semibold shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 mt-2`}
-              >
-                <span>{loading ? "Authenticating..." : `Sign In to ${config.title}`}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              <div className="relative mt-2 space-y-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full h-10 ${config.btnColor} text-white rounded-xl text-xs font-semibold shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In to {config.title}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+
+                {/* Loading indicator near login button */}
+                {loading && (
+                  <div className="flex items-center justify-center gap-2 py-1 px-3 rounded-lg bg-brand-50 border border-brand-200 text-brand-700 text-xs font-medium animate-in fade-in duration-150">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600 shrink-0" />
+                    <span>Signing in, please wait...</span>
+                  </div>
+                )}
+              </div>
             </form>
           )}
 
@@ -547,14 +592,26 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showSignupPassword ? "text" : "password"}
                     required
                     minLength={6}
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
+                    className="w-full pl-9 pr-10 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-0.5 rounded cursor-pointer"
+                    aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                  >
+                    {showSignupPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -565,25 +622,55 @@ export default function RoleLoginForm({ portal }: RoleLoginFormProps) {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     required
                     minLength={6}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
+                    className="w-full pl-9 pr-10 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-0.5 rounded cursor-pointer"
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-10 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs font-semibold shadow-md shadow-brand-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50 mt-3"
-              >
-                <span>{loading ? "Registering..." : "Create WorkOS Account"}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              <div className="relative mt-3 space-y-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white rounded-xl text-xs font-semibold shadow-md shadow-brand-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                      <span>Registering...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Create WorkOS Account</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+
+                {loading && (
+                  <div className="flex items-center justify-center gap-2 py-1 px-3 rounded-lg bg-brand-50 border border-brand-200 text-brand-700 text-xs font-medium animate-in fade-in duration-150">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-600 shrink-0" />
+                    <span>Creating account, please wait...</span>
+                  </div>
+                )}
+              </div>
             </form>
           )}
 

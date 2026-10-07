@@ -20,6 +20,7 @@ import {
   LogOut,
   UserCheck,
   X,
+  Loader2,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -39,6 +40,11 @@ interface SidebarProps {
 export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNavigatingTo(null);
+  }, [pathname]);
 
   useEffect(() => {
     if (!open || !onClose) return;
@@ -67,7 +73,7 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
     };
 
     fetchChatCount();
-    const interval = setInterval(fetchChatCount, 6000);
+    const interval = setInterval(fetchChatCount, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -156,7 +162,7 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`w-72 fixed inset-y-0 left-0 z-50 lg:static lg:translate-x-0 lg:z-auto bg-slate-950 text-slate-100 flex flex-col shrink-0 select-none h-[100dvh] border-r border-white/5 bg-[radial-gradient(28rem_18rem_at_0%_0%,rgba(92,181,40,0.14),transparent_70%)] transition-transform duration-300 ease-in-out ${
+        className={`w-72 max-w-[85vw] fixed inset-y-0 left-0 z-50 lg:static lg:translate-x-0 lg:z-auto bg-slate-950 text-slate-100 flex flex-col shrink-0 select-none h-[100dvh] border-r border-white/5 bg-[radial-gradient(28rem_18rem_at_0%_0%,rgba(92,181,40,0.14),transparent_70%)] transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0 shadow-2xl" : "-translate-x-full lg:translate-x-0"
         }`}
       >
@@ -216,7 +222,20 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={onClose}
+                prefetch={true}
+                onClick={() => {
+                  if (pathname !== item.href) {
+                    setNavigatingTo(item.href);
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(
+                        new CustomEvent("app:route:change", {
+                          detail: { href: item.href, name: item.name },
+                        })
+                      );
+                    }
+                  }
+                  if (onClose) onClose();
+                }}
                 className={`group relative flex items-center gap-3 pl-2.5 pr-3 py-2 rounded-xl text-[13.5px] leading-snug transition-all ${
                   isActive
                     ? "bg-gradient-to-r from-brand-500/25 to-brand-500/5 text-white font-semibold ring-1 ring-brand-500/30"
@@ -236,10 +255,16 @@ export default function Sidebar({ user, open = false, onClose }: SidebarProps) {
                   <Icon className="w-[18px] h-[18px]" />
                 </span>
                 <span className="truncate">{item.name}</span>
-                {item.href === "/chat" && chatMessageCount > 0 && (
-                  <span className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-500 text-slate-950 shadow-xs shrink-0">
-                    {chatMessageCount > 99 ? "99+" : chatMessageCount}
+                {navigatingTo === item.href ? (
+                  <span className="ml-auto shrink-0 flex items-center">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-300" />
                   </span>
+                ) : (
+                  item.href === "/chat" && chatMessageCount > 0 && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-500 text-slate-950 shadow-xs shrink-0">
+                      {chatMessageCount > 99 ? "99+" : chatMessageCount}
+                    </span>
+                  )
                 )}
               </Link>
             );

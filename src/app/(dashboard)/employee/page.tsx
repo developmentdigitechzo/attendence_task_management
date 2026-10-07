@@ -274,7 +274,7 @@ export default function EmployeeDashboardPage() {
             <ul className="mt-3 space-y-2 text-xs text-slate-300">
               <li className="flex items-start gap-2">
                 <span className="text-brand-400">✓</span>
-                <span>Check in before 09:15 AM to maintain full attendance.</span>
+                <span>Check in before 10:15 AM to maintain full attendance.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-400">✓</span>
@@ -282,7 +282,7 @@ export default function EmployeeDashboardPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-brand-400">✓</span>
-                <span>Submit your quick 1-minute End-of-Day update before 6 PM.</span>
+                <span>Submit your quick 1-minute End-of-Day update before 7 PM.</span>
               </li>
             </ul>
           </div>

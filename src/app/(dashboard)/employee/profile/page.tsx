@@ -166,7 +166,7 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* Main Profile Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-6 panel-hover">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 panel-hover">
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-brand-600 to-ink-500 text-white font-bold flex items-center justify-center text-2xl shadow-md shadow-brand-500/20 shrink-0">
           {user?.name
             ?.split(" ")
@@ -211,7 +211,7 @@ export default function EmployeeProfilePage() {
       </div>
 
       {/* Editable Personal Fields Form */}
-      <form onSubmit={handleUpdateProfile} className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 panel-hover">
+      <form onSubmit={handleUpdateProfile} className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-xs space-y-4 panel-hover">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <h3 className="text-sm font-bold text-slate-900">
             Personal Information & Bio
@@ -292,7 +292,7 @@ export default function EmployeeProfilePage() {
       </form>
 
       {/* Security & Change Password Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-4 panel-hover">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-6 shadow-xs space-y-4 panel-hover">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200 shadow-2xs">

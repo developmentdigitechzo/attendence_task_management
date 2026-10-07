@@ -82,13 +82,13 @@ export default function ConfirmHost() {
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-slate-900/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-0 z-[90] bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 ease-out"
       onMouseDown={(e) => e.target === e.currentTarget && close(false)}
     >
       <div
         role="alertdialog"
         aria-modal="true"
-        className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150"
+        className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-3 sm:slide-in-from-bottom-0 duration-200 ease-out"
       >
         <div className="flex items-start gap-3">
           <span

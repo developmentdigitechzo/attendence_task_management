@@ -11,6 +11,7 @@ import {
   Send,
   CheckCircle2,
   Paperclip,
+  Loader2,
 } from "lucide-react";
 import { formatDateDisplay } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export default function TaskDetailModal({
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleStatusChange = async (newStatus: string) => {
+    const previousStatus = status;
     setStatus(newStatus);
     setUpdatingStatus(true);
     try {
@@ -46,7 +48,11 @@ export default function TaskDetailModal({
       });
       if (res.ok) {
         onUpdate();
+      } else {
+        setStatus(previousStatus);
       }
+    } catch {
+      setStatus(previousStatus);
     } finally {
       setUpdatingStatus(false);
     }
@@ -74,8 +80,8 @@ export default function TaskDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 ease-out">
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200 ease-out max-h-[92dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between pb-4 border-b border-slate-100 shrink-0">
           <div>
@@ -208,10 +214,19 @@ export default function TaskDetailModal({
               <button
                 type="submit"
                 disabled={submittingComment || !newComment.trim()}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-xs font-semibold rounded-xl shadow-xs transition disabled:opacity-50 flex items-center gap-1.5 interactive-tap"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Send</span>
+                {submittingComment ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send</span>
+                  </>
+                )}
               </button>
             </form>
           </div>

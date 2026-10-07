@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { promptAction } from "@/components/ui/ConfirmDialog";
+import { toast } from "@/components/ui/ToastProvider";
 
 export default function AdminLeavePage() {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -50,20 +51,31 @@ export default function AdminLeavePage() {
       notePlaceholder: isApprove ? "Add an approval remark..." : "Reason for rejection...",
     });
     if (reviewNotes === null) return;
+
+    // Optimistic update
+    const previousLeaves = [...leaves];
+    setLeaves((prev) =>
+      prev.map((l) =>
+        l.id === leaveId
+          ? { ...l, status: isApprove ? "APPROVED" : "REJECTED", reviewNotes: reviewNotes || l.reviewNotes }
+          : l
+      )
+    );
+    toast.success(`Leave request ${action.toLowerCase()}d successfully.`);
+
     try {
       const res = await fetch("/api/leave", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-skip-toast": "1" },
         body: JSON.stringify({ leaveId, action, reviewNotes }),
       });
 
-      if (res.ok) {
-        setFeedbackMessage(`Leave request ${action.toLowerCase()}d successfully.`);
-        fetchLeaves();
-        setTimeout(() => setFeedbackMessage(null), 3000);
+      if (!res.ok) {
+        throw new Error("Failed to review leave");
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      setLeaves(previousLeaves);
+      toast.error("Could not update leave request. Reverted.");
     }
   };
 
@@ -120,8 +132,8 @@ export default function AdminLeavePage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto pb-1">
+          <table className="w-full text-left text-xs whitespace-nowrap min-w-[700px]">
             <thead>
               <tr className="bg-slate-50/70 text-slate-400 border-b border-slate-100 uppercase tracking-wider text-[10px]">
                 <th className="py-3 px-4 font-semibold">Employee</th>
@@ -133,13 +145,26 @@ export default function AdminLeavePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Loading leave applications...
+            {loading ? (
+              [1, 2, 3, 4].map((i) => (
+                <tr key={`admin-leave-skel-${i}`} className="animate-pulse">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 skeleton-shimmer shrink-0" />
+                      <div className="space-y-1.5 min-w-0">
+                        <div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" />
+                        <div className="w-16 h-2 bg-slate-100 rounded skeleton-shimmer" />
+                      </div>
+                    </div>
                   </td>
+                  <td className="py-3 px-4"><div className="w-14 h-4 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-24 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-28 h-3 bg-slate-200 rounded skeleton-shimmer" /></td>
+                  <td className="py-3 px-4"><div className="w-14 h-4 bg-slate-200 rounded-full skeleton-shimmer" /></td>
+                  <td className="py-3 px-4 text-right"><div className="w-16 h-6 bg-slate-200 rounded-lg ml-auto skeleton-shimmer" /></td>
                 </tr>
-              ) : leaves.length === 0 ? (
+              ))
+            ) : leaves.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     No leave requests found.
